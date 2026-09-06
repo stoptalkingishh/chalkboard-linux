@@ -45,14 +45,7 @@ flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/fla
 flatpak install --system --noninteractive -y flathub org.gottcode.CuteMaze
 
 log "backing up NetworkManager profiles"
-while IFS=: read -r uuid type; do
-  case "$type" in
-    802-11-wireless|802-3-ethernet)
-      profile_file="$(nmcli -g connection.filename connection show "$uuid")"
-      [[ -n "$profile_file" ]] && backup_file "$profile_file"
-      ;;
-  esac
-done < <(nmcli -t -f UUID,TYPE connection show)
+backup_file /etc/NetworkManager/system-connections
 
 log "configuring Cloudflare Family DNS"
 install_managed_file "$REPO_ROOT/config/fedora/systemd-resolved.conf" \
