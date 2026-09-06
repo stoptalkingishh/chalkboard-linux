@@ -54,7 +54,7 @@ install_managed_file "$SCRIPT_DIR/apply-family-dns.sh" \
   /usr/local/sbin/chalkboard-family-dns 0755
 install_managed_file "$REPO_ROOT/config/fedora/network-dispatcher.sh" \
   /etc/NetworkManager/dispatcher.d/90-chalkboard-family-dns 0755
-"$SCRIPT_DIR/apply-family-dns.sh"
+bash "$SCRIPT_DIR/apply-family-dns.sh"
 
 log "configuring power and automatic login"
 install_managed_file "$REPO_ROOT/config/fedora/logind.conf" \
