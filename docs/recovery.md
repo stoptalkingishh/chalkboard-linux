@@ -57,3 +57,10 @@ sudo journalctl -b _UID=$(id -u chalkboard)
 
 Do not run `finalize-lockdown.sh` until the `plasma-provisioned` marker exists
 and the panel is visibly correct.
+
+If child applications report permission errors, verify that the dedicated home
+is entirely owned by the child account:
+
+```bash
+sudo find /home/chalkboard ! -user chalkboard -print
+```

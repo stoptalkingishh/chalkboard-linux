@@ -6,5 +6,6 @@
   "ExtensionInstallBlocklist": ["*"],
   "ForceGoogleSafeSearch": true,
   "ForceYouTubeRestrict": 2,
-  "IncognitoModeAvailability": 1
+  "IncognitoModeAvailability": 1,
+  "PasswordManagerEnabled": false
 }

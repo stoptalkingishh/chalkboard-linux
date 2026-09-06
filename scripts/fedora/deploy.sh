@@ -73,6 +73,7 @@ log "preparing the child desktop"
 for path in \
   "$CHILD_HOME/.config/powerdevilrc" \
   "$CHILD_HOME/.config/kscreenlockerrc" \
+  "$CHILD_HOME/.config/kwalletrc" \
   "$CHILD_HOME/.config/kwinrc" \
   "$CHILD_HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
   "$CHILD_HOME/.config/plasmashellrc" \
@@ -94,6 +95,8 @@ install -o "$CHILD_USER" -g "$CHILD_USER" -m 0600 \
   "$REPO_ROOT/config/fedora/powerdevilrc" "$CHILD_HOME/.config/powerdevilrc"
 install -o "$CHILD_USER" -g "$CHILD_USER" -m 0600 \
   "$REPO_ROOT/config/fedora/kscreenlockerrc" "$CHILD_HOME/.config/kscreenlockerrc"
+install -o "$CHILD_USER" -g "$CHILD_USER" -m 0600 \
+  "$REPO_ROOT/config/fedora/kwalletrc" "$CHILD_HOME/.config/kwalletrc"
 install -o "$CHILD_USER" -g "$CHILD_USER" -m 0644 \
   "$REPO_ROOT/config/fedora/first-login.desktop" \
   "$CHILD_HOME/.config/autostart/chalkboard-first-login.desktop"
@@ -114,6 +117,10 @@ install_managed_file "$REPO_ROOT/config/fedora/kde/kdeglobals" \
   /usr/local/share/chalkboard/policy/kdeglobals
 install_managed_file "$REPO_ROOT/config/fedora/kde/kglobalshortcutsrc" \
   /usr/local/share/chalkboard/policy/kglobalshortcutsrc
+
+# install -d applies ownership to named leaf directories but not every parent it
+# creates. This dedicated account must own its complete home hierarchy.
+chown -R "$CHILD_USER:$CHILD_USER" "$CHILD_HOME"
 
 restorecon -RF /etc/sddm.conf.d /etc/systemd/logind.conf.d \
   /etc/systemd/sleep.conf.d /etc/NetworkManager/dispatcher.d \

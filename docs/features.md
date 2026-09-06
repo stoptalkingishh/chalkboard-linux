@@ -9,6 +9,8 @@
 - Leaves the parent account and its desktop settings unchanged.
 - Disables automatic screen locking because a password-locked autologin account
   could not unlock itself.
+- Disables KDE Wallet and Vivaldi password saving to avoid wallet prompts or
+  secret-service failures in a passwordless autologin session.
 
 ## Desktop
 
@@ -46,8 +48,8 @@ Additional software:
 Vivaldi receives mandatory policy that disables browser DNS-over-HTTPS,
 extensions, guest mode, additional browser profiles, incognito mode, and
 developer tools. Google SafeSearch and YouTube Restricted Mode are requested
-through Chromium policy. Effective policy must be confirmed at
-`vivaldi://policy` during graphical testing.
+through Chromium policy, and browser password saving is disabled. Effective
+policy must be confirmed at `vivaldi://policy` during graphical testing.
 
 ## Network
 
