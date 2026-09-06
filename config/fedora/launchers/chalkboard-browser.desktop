@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Web Browser
+Exec=/usr/bin/vivaldi-stable --no-first-run
+Icon=vivaldi
+Terminal=false

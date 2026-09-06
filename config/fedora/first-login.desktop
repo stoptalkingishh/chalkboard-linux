@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Chalkboard First Login
+Exec=/usr/local/libexec/chalkboard-first-login
+NoDisplay=true
+OnlyShowIn=KDE;
+X-KDE-autostart-after=panel

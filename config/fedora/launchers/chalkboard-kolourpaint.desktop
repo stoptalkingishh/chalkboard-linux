@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=KolourPaint
+Comment=Paint and draw
+Exec=/usr/bin/kolourpaint
+Icon=kolourpaint
+Terminal=false

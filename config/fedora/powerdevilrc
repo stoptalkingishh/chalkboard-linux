@@ -1,0 +1,17 @@
+[AC][SuspendAndShutdown]
+AutoSuspendAction=0
+InhibitLidActionWhenExternalMonitorPresent=false
+LidAction=8
+PowerButtonAction=8
+
+[Battery][SuspendAndShutdown]
+AutoSuspendAction=0
+InhibitLidActionWhenExternalMonitorPresent=false
+LidAction=8
+PowerButtonAction=8
+
+[LowBattery][SuspendAndShutdown]
+AutoSuspendAction=0
+InhibitLidActionWhenExternalMonitorPresent=false
+LidAction=8
+PowerButtonAction=8

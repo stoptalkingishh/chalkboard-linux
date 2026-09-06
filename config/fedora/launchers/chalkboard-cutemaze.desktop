@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=CuteMaze
+Comment=Find your way through a maze
+Exec=/usr/bin/flatpak run org.gottcode.CuteMaze
+Icon=org.gottcode.CuteMaze
+Terminal=false

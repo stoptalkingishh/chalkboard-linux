@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Writer
+Comment=Write stories and documents
+Exec=/usr/bin/libreoffice --writer
+Icon=libreoffice-writer
+Terminal=false

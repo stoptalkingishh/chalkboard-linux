@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=GCompris
+Comment=Educational activities
+Exec=/usr/bin/gcompris-qt
+Icon=gcompris-qt
+Terminal=false

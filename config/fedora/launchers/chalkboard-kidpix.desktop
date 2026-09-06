@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Kid Pix
+Comment=Draw and create
+Exec=/usr/bin/vivaldi-stable --no-first-run --app=https://kidpix.app
+Icon=applications-graphics
+Terminal=false

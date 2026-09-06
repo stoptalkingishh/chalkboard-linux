@@ -1,0 +1,92 @@
+# Fedora deployment runbook
+
+This runbook currently supports Fedora Linux 43 KDE Plasma Desktop Edition and
+the fixed child username `chalkboard`.
+
+## Before deployment
+
+1. Back up irreplaceable files.
+2. Verify local login and `sudo` for the parent account.
+3. Verify SSH key access for the parent account.
+4. Keep the machine connected to power.
+5. Close child-session documents before power behavior is tested.
+
+Run the read-only audit:
+
+```bash
+bash scripts/fedora/audit.sh
+```
+
+Create or enforce the child account policy:
+
+```bash
+sudo bash scripts/fedora/create-child-user.sh chalkboard
+```
+
+## Stage one
+
+```bash
+sudo bash scripts/fedora/deploy.sh
+```
+
+Stage one performs the following operations:
+
+- Installs the application catalog, Vivaldi, and CuteMaze.
+- Saves original managed files under `/var/lib/chalkboard/backup`.
+- Applies Family DNS to NetworkManager Wi-Fi and Ethernet profiles.
+- Installs Vivaldi managed policy.
+- Configures shutdown behavior, disables sleep, and enables autologin.
+- Prepares launchers, PowerDevil settings, and the first-login provisioner.
+- Stages but does not activate immutable KDE restrictions.
+
+When it succeeds, reboot:
+
+```bash
+sudo reboot
+```
+
+SDDM automatically starts `chalkboard`. Wait up to two minutes for the panel to
+appear. The first-login process writes:
+
+```text
+/home/chalkboard/.local/state/chalkboard/plasma-provisioned
+```
+
+Its log is:
+
+```text
+/home/chalkboard/.local/state/chalkboard/first-login.log
+```
+
+Do not finalize if the panel does not contain the expected launchers and clock.
+Use the recovery guide to inspect the log first.
+
+## Finalize
+
+Connect as the parent over SSH or switch to a local text console, then run:
+
+```bash
+sudo bash scripts/fedora/finalize-lockdown.sh
+sudo reboot
+```
+
+The second reboot loads immutable child-only KDE policy. Run verification as the
+parent:
+
+```bash
+bash scripts/fedora/verify.sh
+```
+
+Also verify graphically:
+
+1. The panel contains only approved launchers and a clock.
+2. Meta, `Alt+F1`, `Alt+F2`, and `Alt+Space` do not open a launcher.
+3. Right-clicking the desktop or panel cannot enter edit mode.
+4. Every launcher starts successfully.
+5. `vivaldi://policy` reports the Chalkboard policies with status `OK`.
+6. `https://malware.testcategory.com/` is blocked.
+7. `https://nudity.testcategory.com/` is blocked.
+8. The parent account still has its normal desktop and administrative access.
+
+Test lid and power-key shutdown last because a successful test powers off the
+machine.

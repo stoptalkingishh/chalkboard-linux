@@ -1,0 +1,10 @@
+{
+  "BrowserAddPersonEnabled": false,
+  "BrowserGuestModeEnabled": false,
+  "DeveloperToolsAvailability": 2,
+  "DnsOverHttpsMode": "off",
+  "ExtensionInstallBlocklist": ["*"],
+  "ForceGoogleSafeSearch": true,
+  "ForceYouTubeRestrict": 2,
+  "IncognitoModeAvailability": 1
+}

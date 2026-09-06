@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Teach Your Monster
+Comment=Reading and learning games
+Exec=/usr/bin/vivaldi-stable --no-first-run --app=https://www.teachyourmonster.org/
+Icon=applications-education
+Terminal=false

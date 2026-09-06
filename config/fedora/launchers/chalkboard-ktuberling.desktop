@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Potato Guy
+Comment=Create pictures with characters and objects
+Exec=/usr/bin/ktuberling
+Icon=ktuberling
+Terminal=false

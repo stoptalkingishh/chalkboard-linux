@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Calculator
+Exec=/usr/bin/kcalc
+Icon=kcalc
+Terminal=false

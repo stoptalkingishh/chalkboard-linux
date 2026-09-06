@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=KMines
+Comment=Logic puzzle
+Exec=/usr/bin/kmines
+Icon=kmines
+Terminal=false

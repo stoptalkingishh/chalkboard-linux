@@ -1,0 +1,12 @@
+[KDE Action Restrictions][$i]
+action/run_command=false
+custom_config=false
+plasma/containment_actions=false
+plasma-desktop/scripting_console=false
+plasma/plasmashell/unlockedDesktop=false
+run_command=false
+run_desktop_files=false
+shell_access=false
+
+[KDE Control Module Restrictions][$i]
+kcm_touchpad=false
