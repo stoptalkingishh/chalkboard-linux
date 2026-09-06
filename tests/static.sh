@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 while IFS= read -r script; do
   bash -n "$script"
-  shellcheck -x "$script"
+  shellcheck -x -P SCRIPTDIR "$script"
 done < <(find scripts config -type f -name '*.sh' -print)
 
 python3 -m json.tool config/fedora/vivaldi-policy.json >/dev/null
