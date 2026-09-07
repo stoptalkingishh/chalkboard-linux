@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Power
+Comment=Shut down or restart this device
+Exec=/usr/local/libexec/chalkboard-power-menu
+Icon=system-shutdown
+Terminal=false

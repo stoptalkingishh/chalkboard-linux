@@ -2,8 +2,8 @@
 
 ## Parent access
 
-The child panel intentionally has no network or settings controls. Use one of
-these parent paths:
+The child panel has Wi-Fi controls but no general system settings. Use one of
+these parent paths for administration:
 
 - SSH into the device with the parent key.
 - Press `Ctrl+Alt+F3`, log in as the parent, and use the text console.

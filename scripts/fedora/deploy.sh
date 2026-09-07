@@ -26,7 +26,7 @@ printf '%s\n' "$CHILD_USER" >"$STATE_DIR/child-user"
 
 log "installing Fedora applications"
 dnf -y install \
-  curl flatpak gnupg2 plasma-systemsettings qt6-qttools \
+  curl flatpak gnupg2 kdialog plasma-nm plasma-systemsettings qt6-qttools \
   gcompris-qt kolourpaint kcalc libreoffice-writer ktuberling kmines
 
 log "configuring the authenticated Vivaldi repository"
@@ -108,6 +108,8 @@ done
 
 install_managed_file "$SCRIPT_DIR/first-login.sh" \
   /usr/local/libexec/chalkboard-first-login 0755
+install_managed_file "$SCRIPT_DIR/power-menu.sh" \
+  /usr/local/libexec/chalkboard-power-menu 0755
 install_managed_file "$REPO_ROOT/config/fedora/kde/panel.js" \
   /usr/local/share/chalkboard/panel.js
 

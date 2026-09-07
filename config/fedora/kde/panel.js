@@ -30,4 +30,12 @@ for (const desktopFile of launchers) {
 }
 
 panel.addWidget("org.kde.plasma.panelspacer");
+panel.addWidget("org.kde.plasma.networkmanagement");
+panel.addWidget("org.kde.plasma.battery");
+
+const powerLauncher = panel.addWidget("org.kde.plasma.icon");
+powerLauncher.currentConfigGroup = ["General"];
+powerLauncher.writeConfig("url", "file:///home/chalkboard/.local/share/applications/chalkboard-power.desktop");
+powerLauncher.writeConfig("localPath", "/home/chalkboard/.local/share/applications/chalkboard-power.desktop");
+
 panel.addWidget("org.kde.plasma.digitalclock");

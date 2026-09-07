@@ -97,7 +97,7 @@ bash scripts/fedora/verify.sh
 
 Also verify graphically:
 
-1. The panel contains only approved launchers and a clock.
+1. The panel contains approved launchers, Wi-Fi, battery, power, and a clock.
 2. Meta, `Alt+F1`, `Alt+F2`, and `Alt+Space` do not open a launcher.
 3. Right-clicking the desktop or panel cannot enter edit mode.
 4. Every launcher starts successfully.
@@ -105,6 +105,9 @@ Also verify graphically:
 6. `https://malware.testcategory.com/` is blocked.
 7. `https://nudity.testcategory.com/` is blocked.
 8. The parent account still has its normal desktop and administrative access.
+9. Wi-Fi can disconnect and reconnect, and `resolvectl status` still shows only
+   Cloudflare Family DNS afterward.
+10. The Power launcher asks for confirmation before restart or shutdown.
 
 Test lid and power-key shutdown last because a successful test powers off the
 machine.

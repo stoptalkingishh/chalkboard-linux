@@ -16,6 +16,10 @@
 
 - Creates one large bottom panel with approved application launchers and a clock.
 - Removes the application launcher, task manager, and system tray.
+- Adds standalone Wi-Fi and battery widgets without restoring the full system
+  tray.
+- Adds a touch-friendly power menu that requires confirmation before shutdown or
+  restart.
 - Disables KRunner and application-launcher shortcuts in the child session.
 - Disables panel editing, desktop scripting, shell access, and unregistered
   desktop-file execution through immutable KDE kiosk policy.
@@ -71,6 +75,8 @@ removed for a child who does not meet that age requirement.
   fallback still goes to the same Family resolver addresses.
 - Reapplies policy to new NetworkManager connections through a dispatcher.
 - Disables Vivaldi Secure DNS so the browser uses the filtered system resolver.
+- Allows the child to connect to or disconnect from Wi-Fi through the restricted
+  panel; newly created Wi-Fi profiles receive Family DNS when activated.
 
 DNS filtering does not inspect page content and cannot guarantee that every
 unsuitable site is blocked. Applications implementing DNS-over-HTTPS or a VPN
@@ -83,6 +89,8 @@ can bypass host resolver policy unless separately restricted.
 - Masks the corresponding systemd sleep targets.
 - Requests clean shutdown for the power key and any detected lid switch.
 - Configures the same shutdown behavior in the child PowerDevil profile.
+- Shows charge state and brightness controls through Plasma's battery widget.
+- Provides confirmed on-screen shutdown and restart for tablets and detachables.
 
 The HP Elite x2 is detachable and may not generate a lid event. Always close
 documents before testing the cover or power button.
