@@ -15,6 +15,12 @@ The implementation was validated against these upstream references on
 - [Vivaldi RPM repository](https://repo.vivaldi.com/archive/vivaldi-fedora.repo)
 - [Chromium DNS-over-HTTPS policy](https://chromium.googlesource.com/chromium/src/+/main/components/policy/resources/templates/policy_definitions/Miscellaneous/DnsOverHttpsMode.yaml)
 - [CuteMaze Flathub manifest](https://github.com/flathub/org.gottcode.CuteMaze)
+- [Teach Your Monster to Read setup and direct play](https://www.teachyourmonster.org/teach-your-monster-to-read/)
+- [Khan Academy Kids supported app stores](https://learn.khanacademy.org/khan-academy-kids/)
+- [Duolingo ABC on Apple platforms](https://apps.apple.com/us/app/learn-to-read-duolingo-abc/id1440502568)
+- [Duolingo ABC on Android](https://play.google.com/store/apps/details?id=com.duolingo.literacy)
+- [Vivaldi profile and First Run behavior](https://help.vivaldi.com/desktop/install-update/full-reset-of-vivaldi/)
+- [Coolmath Games privacy and age statement](https://www.coolmathgames.com/privacyp)
 
 The baseline video is [Saving My Child From Brainrot](https://youtu.be/Fk53XsGGxj8)
 by EposVox. It informs project goals but is not treated as platform documentation.

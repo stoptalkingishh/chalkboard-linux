@@ -42,7 +42,8 @@ Additional software:
 - Vivaldi from its signed official RPM repository
 - CuteMaze from the system-wide verified Flathub repository
 - Kid Pix as a Vivaldi app window
-- Teach Your Monster as a Vivaldi app window
+- Teach Your Monster as a direct-play Vivaldi app window after parent setup
+- Coolmath Games as a Vivaldi app window
 - A general Vivaldi browser launcher
 
 Vivaldi receives mandatory policy that disables browser DNS-over-HTTPS,
@@ -50,6 +51,16 @@ extensions, guest mode, additional browser profiles, incognito mode, and
 developer tools. Google SafeSearch and YouTube Restricted Mode are requested
 through Chromium policy, and browser password saving is disabled. Effective
 policy must be confirmed at `vivaldi://policy` during graphical testing.
+
+Vivaldi does not provide a verified policy or command-line switch that skips its
+own welcome flow. A parent must complete it once before lockdown. Teach Your
+Monster also requires a free parent account, email confirmation, and player
+creation before its direct-play launcher can work.
+
+CoolmathGames.com states that it is designed for ages 13 and older. Its free
+service uses interest-based advertising and collects browser, device, and usage
+information. It is included by explicit project-owner choice and should be
+removed for a child who does not meet that age requirement.
 
 ## Network
 
@@ -79,6 +90,10 @@ documents before testing the cover or power button.
 ## Intentionally excluded
 
 - ScratchJr: no supported official web application was confirmed.
+- Khan Academy Kids: supported on iOS, Android, and Amazon Fire, but not as a
+  Fedora or browser app.
+- Duolingo ABC: supported on iPhone/iPad and Android, but not as a Fedora or
+  browser app.
 - Weather widget: requires a location and third-party data provider and conflicts
   with the offline-first default.
 - Minecraft timing, retro CD-ROM support, and 3D Movie Maker: roadmap projects,

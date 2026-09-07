@@ -11,6 +11,7 @@ The guide will cover:
 - Preventing account, passcode, and cellular-data changes where supported
 - Reviewing privacy permissions, location sharing, backups, and purchases
 - A tested parent recovery procedure
+- Installing Khan Academy Kids and Duolingo ABC through the App Store
 
 Apple controls and menu names change by OS release. The eventual checklist must
 state the tested iOS/iPadOS version and link to current Apple documentation.

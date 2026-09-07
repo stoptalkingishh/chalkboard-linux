@@ -61,6 +61,24 @@ Its log is:
 Do not finalize if the panel does not contain the expected launchers and clock.
 Use the recovery guide to inspect the log first.
 
+## Parent commissioning
+
+Complete online-service setup in the child session before immutable lockdown:
+
+1. Open Vivaldi and complete its welcome flow.
+2. Open `vivaldi://policy` and confirm every Chalkboard policy reports `OK`.
+3. In Vivaldi settings, enable its built-in tracker and ad blocking.
+4. Open Teach Your Monster, create a free home account, confirm the parent email,
+   and create a child player using a nickname.
+5. Close and reopen Teach Your Monster; confirm the launcher enters the reading
+   game rather than account setup.
+6. Open Coolmath Games and review its consent and advertising behavior.
+7. Confirm Kid Pix and every local application starts correctly.
+
+Vivaldi's `--no-first-run` switch does not suppress Vivaldi's own welcome pages.
+The repository intentionally does not edit undocumented internal preferences to
+bypass them because those preferences are version-sensitive.
+
 ## Finalize
 
 Connect as the parent over SSH or switch to a local text console, then run:

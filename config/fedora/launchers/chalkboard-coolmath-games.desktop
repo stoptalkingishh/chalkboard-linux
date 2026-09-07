@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Coolmath Games
+Comment=Online strategy, logic, skill, and math games
+Exec=/usr/bin/vivaldi-stable --no-first-run --app=https://www.coolmathgames.com/
+Icon=applications-games
+Terminal=false

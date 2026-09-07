@@ -73,5 +73,6 @@ specifications. Claims are validated against current platform behavior before
 they become automation. The Fedora implementation is pinned to Fedora 43 and is
 ready for its first complete hardware test; it is not yet a stable release.
 
-See [features](docs/features.md), [recovery](docs/recovery.md), and
-[technical sources](docs/sources.md) for important boundaries and limitations.
+See [features](docs/features.md), [recovery](docs/recovery.md), the
+[roadmap](docs/roadmap.md), and [technical sources](docs/sources.md) for
+important boundaries and limitations.

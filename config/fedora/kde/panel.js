@@ -14,6 +14,7 @@ const launchers = [
     "chalkboard-kolourpaint.desktop",
     "chalkboard-writer.desktop",
     "chalkboard-teach-your-monster.desktop",
+    "chalkboard-coolmath-games.desktop",
     "chalkboard-ktuberling.desktop",
     "chalkboard-cutemaze.desktop",
     "chalkboard-kmines.desktop",
