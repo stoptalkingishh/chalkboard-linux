@@ -14,20 +14,25 @@
 
 ## Desktop
 
-- Creates one large bottom panel with approved application launchers and a clock.
-- Removes the application launcher, task manager, and system tray.
-- Adds standalone Wi-Fi and battery widgets without restoring the full system
-  tray.
+- Creates one large bottom panel with approved application launchers, running
+  windows, device controls, and a clock.
+- Removes the application launcher and full system tray.
+- Adds a task manager for normal window switching without restoring the
+  application launcher.
+- Adds standalone removable-device, notification, Bluetooth, volume, Wi-Fi, and
+  battery widgets without restoring the full system tray.
 - Adds a touch-friendly power menu that requires confirmation before shutdown or
   restart.
-- Disables KRunner and application-launcher shortcuts in the child session.
-- Disables panel editing, desktop scripting, shell access, and unregistered
-  desktop-file execution through immutable KDE kiosk policy.
+- Disables KRunner, terminal, and application-launcher shortcuts in the child
+  session while preserving `Super+E` for Dolphin file management.
+- Disables panel editing and desktop scripting through immutable KDE policy.
+- Preserves normal application behavior, file dialogs, multitasking, and window
+  management.
 - Attempts to disable tap-to-click for each touchpad exposed by KWin during the
   first child session. Detachable hardware may expose no touchpad while its
   keyboard cover is disconnected.
 
-KDE kiosk settings are cooperative desktop restrictions, not a security sandbox.
+KDE policy keeps the simplified layout consistent; it is not a security sandbox.
 The separate non-admin account is the primary privilege boundary.
 
 ## Applications

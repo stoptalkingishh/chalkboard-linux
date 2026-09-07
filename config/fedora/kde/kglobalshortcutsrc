@@ -4,3 +4,6 @@ activate application launcher[$i]=none,Meta\tAlt+F1,Activate Application Launche
 [services][org.kde.krunner.desktop]
 RunClipboard[$i]=none
 _launch[$i]=none
+
+[services][org.kde.konsole.desktop]
+_launch[$i]=none

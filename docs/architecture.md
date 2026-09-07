@@ -40,16 +40,20 @@ VPN, hard-coded IP address, or browser using its own encrypted DNS provider.
 The Fedora adapter must account for NetworkManager and browser DNS settings and
 must verify the effective resolver after configuration.
 
-### Desktop lockdown
+### Simplified desktop
 
 Directly rewriting `plasma-org.kde.plasma.desktop-appletsrc` is fragile and can
 corrupt or duplicate panels across Plasma versions. Prefer Plasma scripting,
-KDE kiosk restrictions where appropriate, and a dedicated child account.
+targeted immutable KDE settings where appropriate, and a dedicated child account.
 Never restrict the parent account with child policy.
 
-Removing the system tray also removes routine Wi-Fi and battery controls. A
-restricted child layout may hide those controls only after a documented parent
-recovery path has been tested.
+The child session remains a normal multitasking desktop. Policy fixes the panel
+layout and hides advanced launch paths; it does not block ordinary application
+behavior or replace Linux account permissions.
+
+Instead of a full system tray, the child panel explicitly provides running
+windows, removable devices, notifications, Bluetooth, volume, Wi-Fi, battery,
+and confirmed power actions. A documented parent recovery path remains required.
 
 ### Power behavior
 

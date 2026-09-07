@@ -20,6 +20,8 @@ check "child account is not an administrator" bash -c \
   "! id -nG chalkboard | tr ' ' '\n' | grep -Eq '^(wheel|sudo)$'"
 check "Vivaldi is installed" rpm -q vivaldi-stable
 check "Plasma network controls are installed" rpm -q plasma-nm
+check "Plasma audio controls are installed" rpm -q plasma-pa
+check "Plasma Bluetooth controls are installed" rpm -q bluedevil
 check "confirmed power menu is installed" test -x \
   /usr/local/libexec/chalkboard-power-menu
 for package in gcompris-qt kolourpaint kcalc libreoffice-writer ktuberling kmines; do

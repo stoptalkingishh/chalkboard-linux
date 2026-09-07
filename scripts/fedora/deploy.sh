@@ -26,7 +26,8 @@ printf '%s\n' "$CHILD_USER" >"$STATE_DIR/child-user"
 
 log "installing Fedora applications"
 dnf -y install \
-  curl flatpak gnupg2 kdialog plasma-nm plasma-systemsettings qt6-qttools \
+  bluedevil curl flatpak gnupg2 kdialog plasma-nm plasma-pa \
+  plasma-systemsettings qt6-qttools \
   gcompris-qt kolourpaint kcalc libreoffice-writer ktuberling kmines
 
 log "configuring the authenticated Vivaldi repository"

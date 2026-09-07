@@ -17,9 +17,9 @@ must not be committed. Query logging also requires an explicit family privacy
 decision.
 
 Parent access remains a separate account, SSH, and local console rather than
-secret keyboard shortcuts inside the child session. A shortcut available to a
-parent in the child session is equally available to the child and is therefore
-not an administrative boundary.
+secret keyboard shortcuts inside the child session. The child retains
+`Super+E` for file-management literacy, while direct KRunner and terminal
+shortcuts remain hidden.
 
 Retro-game automation will support only lawfully owned media. It will not ship
 game data, cracked executables, or instructions whose purpose is bypassing copy

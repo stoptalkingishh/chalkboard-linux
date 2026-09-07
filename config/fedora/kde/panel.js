@@ -29,7 +29,12 @@ for (const desktopFile of launchers) {
     launcher.writeConfig("localPath", "/home/chalkboard/.local/share/applications/" + desktopFile);
 }
 
+panel.addWidget("org.kde.plasma.taskmanager");
 panel.addWidget("org.kde.plasma.panelspacer");
+panel.addWidget("org.kde.plasma.devicenotifier");
+panel.addWidget("org.kde.plasma.notifications");
+panel.addWidget("org.kde.plasma.bluetooth");
+panel.addWidget("org.kde.plasma.volume");
 panel.addWidget("org.kde.plasma.networkmanagement");
 panel.addWidget("org.kde.plasma.battery");
 
