@@ -4,6 +4,10 @@ The implementation was validated against these upstream references on
 2026-09-06:
 
 - [KDE Plasma desktop scripting](https://develop.kde.org/docs/plasma/scripting/)
+- [Fedora 43 kdeplasma-addons package contents](https://packages.fedoraproject.org/pkgs/kdeplasma-addons/kdeplasma-addons/fedora-43.html)
+- [KDE Plasma weather widget configuration](https://github.com/KDE/kdeplasma-addons/blob/Plasma/6.4/applets/weather/package/contents/config/main.xml)
+- [KDE NOAA weather provider](https://github.com/KDE/plasma-workspace/tree/Plasma/6.4/dataengines/weather/ions/noaa)
+- [NOAA/National Weather Service API](https://www.weather.gov/documentation/services-web-api)
 - [KDE Kiosk introduction](https://develop.kde.org/docs/administration/kiosk/introduction/)
 - [KDE Kiosk keys](https://develop.kde.org/docs/administration/kiosk/keys/)
 - [systemd logind configuration](https://www.freedesktop.org/software/systemd/man/latest/logind.conf.html)

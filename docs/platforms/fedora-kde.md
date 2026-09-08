@@ -57,6 +57,7 @@ so that immutable policy is not applied before Plasma has generated its layout.
 - Suspend and hibernation are disabled system-wide.
 - The parent account and its Plasma configuration remain unrestricted.
 - Parent recovery uses SSH or a local text console.
+- Weather is an explicit, keyless NOAA opt-in and is disabled in the baseline.
 
 See the [deployment runbook](../deployment.md) and
 [recovery guide](../recovery.md).

@@ -29,6 +29,40 @@ Installed RPMs, Flatpaks, the Flathub remote, and the `chalkboard` account are
 retained to avoid destructive package or account removal. They can be removed
 manually after confirming no data is needed.
 
+Full rollback restores the pre-deployment Plasma applet configuration and
+`/etc/chalkboard/weather.conf`, so an enabled Chalkboard weather widget is also
+removed. The optional `kdeplasma-addons` RPM is retained with other packages.
+
+## Weather recovery
+
+Configure weather with `chalkboard-weather enable` before running
+`finalize-lockdown.sh`. After finalization the child desktop is immutable and
+the weather command refuses further changes, because the locked shell no longer
+accepts the D-Bus panel scripting that would add or remove the widget. Full
+rollback remains the recovery path for a finalized installation.
+
+Weather changes are applied at child login, not directly from the parent shell.
+For a provider failure or privacy rollback before finalization, run:
+
+```bash
+sudo chalkboard-weather disable
+sudo reboot
+```
+
+This immediately removes the configured location from
+`/etc/chalkboard/weather.conf`; the reboot removes the tagged widget. Inspect a
+failed reconciliation with:
+
+```bash
+sudo cat /home/chalkboard/.local/state/chalkboard/weather.log
+rpm -q kdeplasma-addons
+grep '^Enabled=' /etc/chalkboard/weather.conf
+```
+
+If the log reports that it cannot identify the baseline panel, do not edit
+`plasma-org.kde.plasma.desktop-appletsrc` by hand. Disable weather first. Use
+full rollback if the baseline panel itself is damaged.
+
 ## DNS failure
 
 If name resolution fails but SSH by IP still works, roll back. For a temporary
