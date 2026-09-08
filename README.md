@@ -76,3 +76,7 @@ ready for its first complete hardware test; it is not yet a stable release.
 See [features](docs/features.md), [recovery](docs/recovery.md), the
 [roadmap](docs/roadmap.md), and [technical sources](docs/sources.md) for
 important boundaries and limitations.
+
+Parents may separately opt into the [retro-game framework](docs/retro-games.md)
+for lawfully owned media. It is not part of the default deployment, includes no
+game assets or circumvention tooling, and makes no title compatibility claims.

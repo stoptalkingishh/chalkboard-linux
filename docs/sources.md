@@ -21,6 +21,10 @@ The implementation was validated against these upstream references on
 - [Duolingo ABC on Android](https://play.google.com/store/apps/details?id=com.duolingo.literacy)
 - [Vivaldi profile and First Run behavior](https://help.vivaldi.com/desktop/install-update/full-reset-of-vivaldi/)
 - [Coolmath Games privacy and age statement](https://www.coolmathgames.com/privacyp)
+- [Wine package for Fedora 43](https://packages.fedoraproject.org/pkgs/wine/wine/fedora-43.html)
+- [Wine desktop integration package for Fedora 43](https://packages.fedoraproject.org/pkgs/wine/wine-desktop/fedora-43.html)
+- [Lutris package for Fedora 43](https://packages.fedoraproject.org/pkgs/lutris/lutris/fedora-43.html)
+- [Wine security documentation](https://gitlab.winehq.org/wine/wine/-/wikis/FAQ#how-good-is-wine-at-sandboxing-windows-apps)
 
 The baseline video is [Saving My Child From Brainrot](https://youtu.be/Fk53XsGGxj8)
 by EposVox. It informs project goals but is not treated as platform documentation.
