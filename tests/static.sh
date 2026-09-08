@@ -10,8 +10,41 @@ done < <(find scripts config -type f -name '*.sh' -print)
 python3 -m json.tool config/fedora/vivaldi-policy.json >/dev/null
 
 while IFS= read -r desktop_file; do
-  desktop-file-validate "$desktop_file"
+  case "$desktop_file" in
+    config/fedora/gcompris-session.desktop)
+      # Wayland session entries legitimately use the non-standard DesktopNames
+      # key; the XDG launcher validator rejects it exactly as it rejects KDE's
+      # shipped plasma.desktop. Validate these entries structurally instead.
+      for key in Name Comment Exec TryExec; do
+        grep -Eq "^$key=.+" "$desktop_file" || {
+          printf 'Incomplete wayland session entry %s: missing %s.\n' \
+            "$desktop_file" "$key" >&2
+          exit 1
+        }
+      done
+      grep -Fq 'DesktopNames=' "$desktop_file" || {
+        printf 'Wayland session entry %s is missing DesktopNames.\n' \
+          "$desktop_file" >&2
+        exit 1
+      }
+      grep -Fq 'Type=Application' "$desktop_file" || {
+        printf 'Wayland session entry %s is missing Type.\n' \
+          "$desktop_file" >&2
+        exit 1
+      }
+      ;;
+    *)
+      desktop-file-validate "$desktop_file"
+      ;;
+  esac
 done < <(find config -type f -name '*.desktop' -print)
+
+grep -Fq 'Session=plasma.desktop' config/fedora/sddm.conf
+grep -Fq 'Relogin=false' config/fedora/gcompris-sddm.conf
+grep -Fq '/usr/bin/cage -s -- /usr/bin/gcompris-qt --fullscreen --enable-kioskmode' \
+  scripts/fedora/gcompris-session.sh
+grep -Fq 'rm -f /etc/sddm.conf.d/95-chalkboard-gcompris.conf' \
+  scripts/fedora/rollback.sh
 
 if grep -RIE '(password|passwd)[[:space:]]*=' config scripts; then
   printf 'Possible embedded password found.\n' >&2

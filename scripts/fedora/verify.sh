@@ -24,6 +24,11 @@ check "Plasma audio controls are installed" rpm -q plasma-pa
 check "Plasma Bluetooth controls are installed" rpm -q bluedevil
 check "confirmed power menu is installed" test -x \
   /usr/local/libexec/chalkboard-power-menu
+check "Cage kiosk compositor is installed" rpm -q cage
+check "optional GCompris mode command is installed" test -x \
+  /usr/local/sbin/chalkboard-gcompris-mode
+check "GCompris Wayland session is installed" test -f \
+  /usr/local/share/wayland-sessions/chalkboard-gcompris.desktop
 for package in gcompris-qt kolourpaint kcalc libreoffice-writer ktuberling kmines; do
   check "$package is installed" rpm -q "$package"
 done
@@ -39,6 +44,14 @@ else
 fi
 check "SDDM autologin is configured" grep -Fq 'User=chalkboard' \
   /etc/sddm.conf.d/90-chalkboard-autologin.conf
+if [[ -f /var/lib/chalkboard/gcompris-mode-enabled ]]; then
+  check "GCompris mode selects its SDDM session" cmp -s \
+    /usr/local/share/chalkboard/gcompris-sddm.conf \
+    /etc/sddm.conf.d/95-chalkboard-gcompris.conf
+else
+  check "GCompris mode is disabled cleanly" test ! -e \
+    /etc/sddm.conf.d/95-chalkboard-gcompris.conf
+fi
 check "Plasma panel was provisioned" test -f \
   /home/chalkboard/.local/state/chalkboard/plasma-provisioned
 check "immutable KDE policy is finalized" test -f /var/lib/chalkboard/finalized

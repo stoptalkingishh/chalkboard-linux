@@ -6,6 +6,8 @@ The implementation was validated against these upstream references on
 - [KDE Plasma desktop scripting](https://develop.kde.org/docs/plasma/scripting/)
 - [KDE Kiosk introduction](https://develop.kde.org/docs/administration/kiosk/introduction/)
 - [KDE Kiosk keys](https://develop.kde.org/docs/administration/kiosk/keys/)
+- [Cage Wayland kiosk compositor](https://www.hjdskes.nl/projects/cage/)
+- [Fedora 43 Cage package](https://packages.fedoraproject.org/pkgs/cage/cage/fedora-43.html)
 - [systemd logind configuration](https://www.freedesktop.org/software/systemd/man/latest/logind.conf.html)
 - [systemd sleep configuration](https://www.freedesktop.org/software/systemd/man/latest/systemd-sleep.conf.html)
 - [NetworkManager IPv4 settings](https://networkmanager.dev/docs/api/latest/settings-ipv4.html)

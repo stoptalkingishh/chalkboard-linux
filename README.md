@@ -66,6 +66,10 @@ sudo bash scripts/fedora/finalize-lockdown.sh
 sudo reboot
 ```
 
+An optional parent-enabled mode can replace the child Plasma session with a
+single GCompris session. It is installed but disabled by default; see the
+[deployment runbook](docs/deployment.md#optional-single-app-gcompris-mode).
+
 ## Project status
 
 The source video and initial handoff are requirements inputs, not executable

@@ -26,7 +26,7 @@ printf '%s\n' "$CHILD_USER" >"$STATE_DIR/child-user"
 
 log "installing Fedora applications"
 dnf -y install \
-  bluedevil curl flatpak gnupg2 kdialog plasma-nm plasma-pa \
+  bluedevil cage curl flatpak gnupg2 kdialog plasma-nm plasma-pa \
   plasma-systemsettings qt6-qttools \
   gcompris-qt kolourpaint kcalc libreoffice-writer ktuberling kmines
 
@@ -121,13 +121,25 @@ install_managed_file "$REPO_ROOT/config/fedora/kde/kdeglobals" \
 install_managed_file "$REPO_ROOT/config/fedora/kde/kglobalshortcutsrc" \
   /usr/local/share/chalkboard/policy/kglobalshortcutsrc
 
+log "installing the disabled-by-default GCompris session"
+backup_file /etc/sddm.conf.d/95-chalkboard-gcompris.conf
+install_managed_file "$REPO_ROOT/config/fedora/gcompris-session.desktop" \
+  /usr/local/share/wayland-sessions/chalkboard-gcompris.desktop
+install_managed_file "$REPO_ROOT/config/fedora/gcompris-sddm.conf" \
+  /usr/local/share/chalkboard/gcompris-sddm.conf
+install_managed_file "$SCRIPT_DIR/gcompris-session.sh" \
+  /usr/local/libexec/chalkboard-gcompris-session 0755
+install_managed_file "$SCRIPT_DIR/gcompris-mode.sh" \
+  /usr/local/sbin/chalkboard-gcompris-mode 0755
+
 # install -d applies ownership to named leaf directories but not every parent it
 # creates. This dedicated account must own its complete home hierarchy.
 chown -R "$CHILD_USER:$CHILD_USER" "$CHILD_HOME"
 
 restorecon -RF /etc/sddm.conf.d /etc/systemd/logind.conf.d \
   /etc/systemd/sleep.conf.d /etc/NetworkManager/dispatcher.d \
-  /etc/opt/vivaldi /etc/xdg/plasma-workspace "$CHILD_HOME/.config" \
+  /etc/opt/vivaldi /etc/xdg/plasma-workspace /usr/local/share/wayland-sessions \
+  "$CHILD_HOME/.config" \
   "$CHILD_HOME/.local" 2>/dev/null || true
 
 touch "$STATE_DIR/deployed"

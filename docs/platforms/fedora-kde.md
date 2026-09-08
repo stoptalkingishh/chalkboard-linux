@@ -57,6 +57,8 @@ so that immutable policy is not applied before Plasma has generated its layout.
 - Suspend and hibernation are disabled system-wide.
 - The parent account and its Plasma configuration remain unrestricted.
 - Parent recovery uses SSH or a local text console.
+- Optional single-app GCompris mode uses Fedora's Cage package and must be
+  enabled explicitly by root; Plasma remains the default.
 
 See the [deployment runbook](../deployment.md) and
 [recovery guide](../recovery.md).
