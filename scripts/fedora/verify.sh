@@ -147,6 +147,9 @@ check "Application Dashboard was provisioned" grep -Fq \
 check "Icons-only Task Manager was provisioned" grep -Fq \
   'plugin=org.kde.plasma.icontasks' \
   /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc
+check "app menu is curated" bash -c \
+  "! awk '/^plugin=org.kde.plasma.kickerdash\$/{f=1;next} f && /^hiddenApplications=/{n=split(substr(\$0,index(\$0,\"=\")+1),a,\",\"); exit n>10 ? 1 : 0}' \
+     /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc"
 check "immutable KDE policy is finalized" test -f /var/lib/chalkboard/finalized
 if [[ -x /usr/local/libexec/chalkboard-screen-time ]]; then
   check "screen-time configuration is valid" /usr/local/libexec/chalkboard-screen-time check

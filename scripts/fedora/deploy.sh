@@ -130,6 +130,10 @@ install_managed_file "$SCRIPT_DIR/weather.sh" \
   /usr/local/sbin/chalkboard-weather 0755
 install_managed_file "$REPO_ROOT/config/fedora/kde/panel.js" \
   /usr/local/share/chalkboard/panel.js
+install_managed_file "$SCRIPT_DIR/curate-app-menu.sh" \
+  /usr/local/libexec/chalkboard-curate-app-menu 0755
+install_managed_file "$REPO_ROOT/config/fedora/app-allowlist.txt" \
+  /usr/local/share/chalkboard/app-allowlist.txt
 install_managed_file "$REPO_ROOT/config/fedora/kde/weather.js" \
   /usr/local/share/chalkboard/weather.js
 install_managed_file "$REPO_ROOT/config/fedora/weather-autostart.desktop" \

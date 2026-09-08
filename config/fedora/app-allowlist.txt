@@ -1,0 +1,12 @@
+chalkboard-browser.desktop
+chalkboard-coolmath-games.desktop
+chalkboard-cutemaze.desktop
+chalkboard-gcompris.desktop
+chalkboard-kcalc.desktop
+chalkboard-kidpix.desktop
+chalkboard-kmines.desktop
+chalkboard-kolourpaint.desktop
+chalkboard-ktuberling.desktop
+chalkboard-teach-your-monster.desktop
+chalkboard-writer.desktop
+org.kde.dolphin.desktop

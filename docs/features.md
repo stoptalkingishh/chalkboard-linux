@@ -20,6 +20,11 @@
   with a small set of favorites and normal running-window switching.
 - Keeps ordinary Dashboard application browsing, but removes recent documents,
   extra search runners, and Konsole from the child-facing menu.
+- Curates the Application Dashboard to an explicit allowlist: every installed
+  application that is not in `config/fedora/app-allowlist.txt` is hidden. This
+  removes Fedora/KDE system tools, the software center, email/chat clients, and
+  development utilities while keeping the curated applications, the browser, and
+  Dolphin.
 - Uses a 68-pixel panel and 175% scaling on the high-density internal display.
 - Enables Plasma Keyboard for touch text entry and `iio-sensor-proxy` for
   supported automatic rotation.
