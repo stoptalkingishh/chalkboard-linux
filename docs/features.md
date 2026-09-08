@@ -109,6 +109,7 @@ documents before testing the cover or power button.
   browser app.
 - Weather widget: requires a location and third-party data provider and conflicts
   with the offline-first default.
-- Minecraft timing, retro CD-ROM support, and 3D Movie Maker: roadmap projects,
-  not part of the initial Fedora baseline.
+- Minecraft timing and 3D Movie Maker remain roadmap projects. Generic
+  parent-owned Windows installers have a separate optional Wine workflow, not a
+  title-specific compatibility profile or part of the initial Fedora baseline.
 - BIOS changes: cannot be safely generalized or automated from this repository.
