@@ -2,6 +2,26 @@
 
 set -Eeuo pipefail
 
+NEXTDNS_PROFILE_FILE="${CHALKBOARD_NEXTDNS_PROFILE_FILE:-/etc/chalkboard/nextdns-profile}"
+
+if [[ -e "$NEXTDNS_PROFILE_FILE" ]]; then
+  [[ -f "$NEXTDNS_PROFILE_FILE" && -r "$NEXTDNS_PROFILE_FILE" ]] || {
+    printf 'NextDNS configuration is not a readable regular file.\n' >&2
+    exit 1
+  }
+  nextdns_profile="$(<"$NEXTDNS_PROFILE_FILE")"
+  [[ "$nextdns_profile" =~ ^[0-9a-f]{6}$ ]] || {
+    printf 'Invalid NextDNS configuration ID.\n' >&2
+    exit 1
+  }
+  dns_name="${nextdns_profile}.dns.nextdns.io"
+  ipv4_dns="45.90.28.0#${dns_name} 45.90.30.0#${dns_name}"
+  ipv6_dns="2a07:a8c0::#${dns_name} 2a07:a8c1::#${dns_name}"
+else
+  ipv4_dns='1.1.1.3#family.cloudflare-dns.com 1.0.0.3#family.cloudflare-dns.com'
+  ipv6_dns='2606:4700:4700::1113#family.cloudflare-dns.com 2606:4700:4700::1003#family.cloudflare-dns.com'
+fi
+
 configure_profile() {
   local uuid="$1"
   local type
@@ -22,8 +42,8 @@ configure_profile() {
     ipv6.dns-priority -2147483648 \
     ipv4.dns-search '~.' \
     ipv6.dns-search '~.' \
-    ipv4.dns '1.1.1.3#family.cloudflare-dns.com 1.0.0.3#family.cloudflare-dns.com' \
-    ipv6.dns '2606:4700:4700::1113#family.cloudflare-dns.com 2606:4700:4700::1003#family.cloudflare-dns.com'
+    ipv4.dns "$ipv4_dns" \
+    ipv6.dns "$ipv6_dns"
 }
 
 if [[ $EUID -ne 0 ]]; then

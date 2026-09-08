@@ -34,11 +34,13 @@ phase must not duplicate repositories, launchers, widgets, or configuration.
 
 ### DNS filtering
 
-Cloudflare Family DNS can reduce accidental exposure to known malware and adult
-domains. It does not block every unsuitable page, search result, application,
-VPN, hard-coded IP address, or browser using its own encrypted DNS provider.
-The Fedora adapter must account for NetworkManager and browser DNS settings and
-must verify the effective resolver after configuration.
+Cloudflare Family DNS is the default. A parent may instead provide a deployment-
+specific NextDNS configuration ID after reviewing that service's policy and
+logging options. Resolver backends are alternatives, never combined. Neither
+can block every unsuitable page, search result, application, VPN, hard-coded IP
+address, or browser using its own encrypted DNS provider. The Fedora adapter
+must account for NetworkManager and browser DNS settings and must verify the
+effective resolver after configuration.
 
 ### Simplified desktop
 

@@ -26,6 +26,10 @@ require_fedora() {
   [[ "${VERSION_ID:-}" == 43 ]] || die "this release is tested only on Fedora 43"
 }
 
+validate_nextdns_profile() {
+  [[ "$1" =~ ^[0-9a-f]{6}$ ]]
+}
+
 backup_file() {
   local path="$1"
   local backup="$BACKUP_DIR/files$path"
