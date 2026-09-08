@@ -153,6 +153,18 @@ if [[ -x /usr/local/libexec/chalkboard-screen-time ]]; then
   check "screen-time config is root-owned and private" bash -c \
     "[[ \$(stat -c '%u %a' /etc/chalkboard/screen-time.conf) == '0 600' ]]"
 fi
+if grep -Fqx 'Enabled=true' /etc/chalkboard/weather.conf 2>/dev/null; then
+  check "optional KDE weather widget is installed" rpm -q kdeplasma-addons
+  check "optional weather was applied to the child panel" test -f \
+    /home/chalkboard/.local/state/chalkboard/weather-enabled
+else
+  check "optional weather is disabled" test ! -f \
+    /home/chalkboard/.local/state/chalkboard/weather-enabled
+  # A disabled feature must not leave a Chalkboard-managed weather widget on the
+  # panel; otherwise the config was changed manually after finalization.
+  check "no Chalkboard weather widget remains" bash -c \
+    "! grep -Eq 'Managed=true' /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc"
+fi
 
 printf '\nFailures: %s\n' "$failures"
 exit "$failures"

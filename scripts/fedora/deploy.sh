@@ -80,7 +80,9 @@ for path in \
   "$CHILD_HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
   "$CHILD_HOME/.config/plasmashellrc" \
   "$CHILD_HOME/.config/autostart/chalkboard-first-login.desktop" \
-  "$CHILD_HOME/.local/state/chalkboard/plasma-provisioned"; do
+  "$CHILD_HOME/.config/autostart/chalkboard-weather.desktop" \
+  "$CHILD_HOME/.local/state/chalkboard/plasma-provisioned" \
+  "$CHILD_HOME/.local/state/chalkboard/weather-enabled"; do
   backup_file "$path"
 done
 for desktop_file in "$REPO_ROOT"/config/fedora/launchers/*.desktop; do
@@ -118,10 +120,21 @@ done
 
 install_managed_file "$SCRIPT_DIR/first-login.sh" \
   /usr/local/libexec/chalkboard-first-login 0755
+install_managed_file "$SCRIPT_DIR/lib.sh" \
+  /usr/local/libexec/chalkboard-lib 0755
 install_managed_file "$SCRIPT_DIR/power-menu.sh" \
   /usr/local/libexec/chalkboard-power-menu 0755
+install_managed_file "$SCRIPT_DIR/weather-session.sh" \
+  /usr/local/libexec/chalkboard-weather-session 0755
+install_managed_file "$SCRIPT_DIR/weather.sh" \
+  /usr/local/sbin/chalkboard-weather 0755
 install_managed_file "$REPO_ROOT/config/fedora/kde/panel.js" \
   /usr/local/share/chalkboard/panel.js
+install_managed_file "$REPO_ROOT/config/fedora/kde/weather.js" \
+  /usr/local/share/chalkboard/weather.js
+install_managed_file "$REPO_ROOT/config/fedora/weather-autostart.desktop" \
+  /usr/local/share/chalkboard/weather-autostart.desktop
+backup_file /etc/chalkboard/weather.conf
 
 install_managed_file "$REPO_ROOT/config/fedora/kde-session-env.sh" \
   /etc/xdg/plasma-workspace/env/10-chalkboard-kiosk.sh 0755

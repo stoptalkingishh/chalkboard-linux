@@ -2,7 +2,8 @@
 
 ## Next candidates
 
-- Optional weather widget with an explicit location, provider, and privacy review
+- Additional keyless weather providers beyond the optional NOAA implementation
+- Configurable NextDNS backend as an alternative to Cloudflare Families
 - Scheduled device downtime and per-application allowances
 - Parent-activated single-application mode for younger children
 - Owned-media Lutris and Wine profiles for compatible retro games

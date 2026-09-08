@@ -61,6 +61,7 @@ so that immutable policy is not applied before Plasma has generated its layout.
   disabled until a parent configures and enables it.
 - Optional single-app GCompris mode uses Fedora's Cage package and must be
   enabled explicitly by root; Plasma remains the default.
+- Weather is an explicit, keyless NOAA opt-in and is disabled in the baseline.
 
 See the [deployment runbook](../deployment.md) and
 [recovery guide](../recovery.md).
