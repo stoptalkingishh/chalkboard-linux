@@ -38,6 +38,8 @@ Stage one performs the following operations:
 - Configures shutdown behavior, disables sleep, and enables autologin.
 - Prepares launchers, PowerDevil settings, and the first-login provisioner.
 - Stages but does not activate immutable KDE restrictions.
+- Installs the optional weather controls, but leaves weather disabled and does
+  not install or add the widget.
 
 When it succeeds, reboot:
 
@@ -60,6 +62,53 @@ Its log is:
 
 Do not finalize if the panel does not contain the expected launchers and clock.
 Use the recovery guide to inspect the log first.
+
+## Optional weather
+
+Weather is disabled by default. A parent may explicitly enable it after stage
+one by supplying an exact NOAA station name and state or territory code:
+
+```bash
+sudo chalkboard-weather enable --provider noaa \
+  --location "EXACT NOAA STATION NAME, ST"
+sudo reboot
+```
+
+Do not use the example text as a location. The value must match a station in
+`/usr/share/plasma/weather/noaa_station_list.xml`; station names can contain
+additional commas. This release intentionally supports only the packaged NOAA
+provider. It needs no API key and is useful only for locations covered by the
+US National Weather Service.
+
+Enabling installs Fedora's `kdeplasma-addons` package and adds KDE's stock
+`org.kde.plasma.weather` widget immediately before the clock at the next child
+login. It does not change `panel.js`. Repeating the command updates the same
+managed widget rather than adding another one.
+
+Privacy review: the widget contacts `api.weather.gov` over HTTPS at least every
+30 minutes. NOAA receives the device's public IP, the selected station, station
+coordinates, and county/forecast-zone requests. The station is also stored in
+root-owned, system-readable configuration and the child's Plasma configuration.
+No browser geolocation, GPS lookup, API key, or credential is used. Weather is
+not appropriate when the installation must remain offline-first or disclosing
+the approximate location is unacceptable.
+
+Disable it and erase the location from Chalkboard's system configuration with:
+
+```bash
+sudo chalkboard-weather disable
+sudo reboot
+```
+
+Disable is also idempotent. It removes only the widget tagged as managed by
+Chalkboard; it does not rebuild the panel or remove unrelated weather widgets.
+The RPM remains installed, consistent with the repository's non-destructive
+rollback policy.
+
+Configure weather before immutable policy is finalized. After
+`finalize-lockdown.sh` runs, the locked shell no longer accepts the D-Bus panel
+scripting that reconciliation uses, so `chalkboard-weather` refuses changes and
+full rollback is the only recovery path for a finalized installation.
 
 ## Parent commissioning
 
@@ -111,6 +160,9 @@ Also verify graphically:
 10. The Power launcher asks for confirmation before restart or shutdown.
 11. `Super+E` opens Dolphin, while `Ctrl+Alt+T` does not open a terminal.
 12. Open applications appear in the task manager and can be switched normally.
+13. If weather was enabled, the selected location appears immediately before
+    the clock and `api.weather.gov` requests succeed. If disabled, no weather
+    widget appears.
 
 Test lid and power-key shutdown last because a successful test powers off the
 machine.

@@ -31,6 +31,11 @@
 - Attempts to disable tap-to-click for each touchpad exposed by KWin during the
   first child session. Detachable hardware may expose no touchpad while its
   keyboard cover is disconnected.
+- Optionally adds Fedora's packaged KDE weather widget only after a parent
+  explicitly selects the NOAA provider and a station. Weather remains disabled
+  by default, can change only before `finalize-lockdown.sh`, and is removed
+  cleanly when disabled.
+  by default and does not alter baseline panel provisioning.
 
 KDE policy keeps the simplified layout consistent; it is not a security sandbox.
 The separate non-admin account is the primary privilege boundary.
@@ -107,8 +112,9 @@ documents before testing the cover or power button.
   Fedora or browser app.
 - Duolingo ABC: supported on iPhone/iPad and Android, but not as a Fedora or
   browser app.
-- Weather widget: requires a location and third-party data provider and conflicts
-  with the offline-first default.
+- Weather remains outside the default baseline because it discloses an
+  approximate location to a network provider and conflicts with offline-first
+  operation. See the deployment runbook for the explicit opt-in.
 - Minecraft timing, retro CD-ROM support, and 3D Movie Maker: roadmap projects,
   not part of the initial Fedora baseline.
 - BIOS changes: cannot be safely generalized or automated from this repository.
