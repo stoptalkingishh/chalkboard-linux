@@ -182,7 +182,7 @@ install_game() {
   prefix="$CHILD_HOME/.local/share/chalkboard/retro/$id/prefix"
   if [[ -d "$game_dir" ]]; then
     install_framework
-    recorded_hash="$(<"$game_dir/installer-sha256" 2>/dev/null || true)"
+    recorded_hash="$(cat "$game_dir/installer-sha256" 2>/dev/null || true)"
     [[ -n "$recorded_hash" ]] || die "registered digest is missing"
     [[ "$recorded_hash" == "$actual_hash" ]] || \
       die "supplied installer no longer matches the registered digest"
