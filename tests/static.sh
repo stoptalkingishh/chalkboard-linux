@@ -8,6 +8,7 @@ while IFS= read -r script; do
 done < <(find scripts config -type f -name '*.sh' -print)
 
 python3 -m json.tool config/fedora/vivaldi-policy.json >/dev/null
+python3 -m unittest discover -s tests -p 'test_*.py'
 
 while IFS= read -r desktop_file; do
   desktop-file-validate "$desktop_file"

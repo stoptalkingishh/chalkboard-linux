@@ -1,0 +1,12 @@
+[Unit]
+Description=Check the Chalkboard screen-time schedule
+
+[Timer]
+OnBootSec=15s
+OnUnitInactiveSec=30s
+AccuracySec=1s
+OnClockChange=yes
+OnTimezoneChange=yes
+
+[Install]
+WantedBy=timers.target

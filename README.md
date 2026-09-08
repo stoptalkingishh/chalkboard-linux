@@ -76,3 +76,7 @@ ready for its first complete hardware test; it is not yet a stable release.
 See [features](docs/features.md), [recovery](docs/recovery.md), the
 [roadmap](docs/roadmap.md), and [technical sources](docs/sources.md) for
 important boundaries and limitations.
+
+Optional Fedora downtime schedules are installed and enabled separately. See
+[Fedora screen time](docs/screen-time.md); the framework is disabled by default
+and its example config contains no schedule.

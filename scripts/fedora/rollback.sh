@@ -9,6 +9,12 @@ source "$SCRIPT_DIR/lib.sh"
 require_root
 [[ -d "$BACKUP_DIR/files" ]] || die "no Chalkboard backup was found"
 
+if [[ -x /usr/local/libexec/chalkboard-screen-time ]]; then
+  log "disabling screen-time and restoring the child account expiry"
+  systemctl disable --now chalkboard-screen-time.timer 2>/dev/null || true
+  /usr/local/libexec/chalkboard-screen-time force-release
+fi
+
 log "restoring files that existed before deployment"
 while IFS= read -r backup; do
   target="/${backup#"$BACKUP_DIR/files/"}"
