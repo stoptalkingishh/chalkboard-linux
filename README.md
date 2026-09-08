@@ -59,6 +59,10 @@ Apply stage one:
 sudo bash scripts/fedora/deploy.sh
 ```
 
+Cloudflare Family DNS remains the default. A parent can instead opt in to a
+NextDNS configuration by following the DNS section of the deployment runbook;
+no NextDNS identifier is included in this repository.
+
 After reboot and first-login provisioning, apply the immutable child policy:
 
 ```bash

@@ -12,7 +12,17 @@ VIVALDI_KEY_FINGERPRINT="8D1FA52AEF58A09D889DD4221256C34716BD9233"
 
 require_root
 require_fedora
-[[ $# -eq 0 ]] || die "deploy.sh does not accept arguments"
+case $# in
+  0)
+    ;;
+  2)
+    [[ "$1" == --nextdns-profile ]] || die "usage: deploy.sh [--nextdns-profile CONFIGURATION_ID]"
+    validate_nextdns_profile "$2" || die "NextDNS configuration ID must be exactly six lowercase hexadecimal characters"
+    ;;
+  *)
+    die "usage: deploy.sh [--nextdns-profile CONFIGURATION_ID]"
+    ;;
+esac
 getent passwd "$CHILD_USER" >/dev/null || die "account $CHILD_USER does not exist"
 [[ "$(id -u "$CHILD_USER")" -ge 1000 ]] || die "refusing to configure a system account"
 if id -nG "$CHILD_USER" | tr ' ' '\n' | grep -Eq '^(wheel|sudo)$'; then
@@ -45,17 +55,8 @@ log "installing CuteMaze from Flathub"
 flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 flatpak install --system --noninteractive -y flathub org.gottcode.CuteMaze
 
-log "backing up NetworkManager profiles"
-backup_file /etc/NetworkManager/system-connections
-
-log "configuring Cloudflare Family DNS"
-install_managed_file "$REPO_ROOT/config/fedora/systemd-resolved.conf" \
-  /etc/systemd/resolved.conf.d/60-chalkboard-family.conf
-install_managed_file "$SCRIPT_DIR/apply-family-dns.sh" \
-  /usr/local/sbin/chalkboard-family-dns 0755
-install_managed_file "$REPO_ROOT/config/fedora/network-dispatcher.sh" \
-  /etc/NetworkManager/dispatcher.d/90-chalkboard-family-dns 0755
-bash "$SCRIPT_DIR/apply-family-dns.sh"
+log "configuring DNS filtering"
+bash "$SCRIPT_DIR/configure-dns.sh" "$@"
 
 log "configuring power and automatic login"
 install_managed_file "$REPO_ROOT/config/fedora/logind.conf" \

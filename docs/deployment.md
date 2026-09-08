@@ -29,11 +29,30 @@ sudo bash scripts/fedora/create-child-user.sh chalkboard
 sudo bash scripts/fedora/deploy.sh
 ```
 
+This uses Cloudflare Family DNS by default. To opt in to NextDNS, first create
+and review a configuration at `my.nextdns.io`, including its parental-control,
+denylist, and logging settings. Then copy its six-character configuration ID
+from the setup page into a shell variable and explicitly pass it to deployment:
+
+```bash
+read -r -p 'NextDNS configuration ID: ' NEXTDNS_PROFILE_ID
+sudo bash scripts/fedora/deploy.sh --nextdns-profile "$NEXTDNS_PROFILE_ID"
+unset NEXTDNS_PROFILE_ID
+```
+
+The ID must contain exactly six lowercase hexadecimal characters. It is not an
+account password, but it identifies the family's resolver configuration and
+must not be committed to this repository. Chalkboard stores it locally in
+`/etc/chalkboard/nextdns-profile`, owned by root with mode `0600`. The setup uses
+Fedora's existing NetworkManager and `systemd-resolved`; it does not download or
+install the NextDNS CLI or a custom root certificate.
+
 Stage one performs the following operations:
 
 - Installs the application catalog, Vivaldi, and CuteMaze.
 - Saves original managed files under `/var/lib/chalkboard/backup`.
-- Applies Family DNS to NetworkManager Wi-Fi and Ethernet profiles.
+- Applies the selected Family DNS backend to NetworkManager Wi-Fi and Ethernet
+  profiles.
 - Installs Vivaldi managed policy.
 - Configures shutdown behavior, disables sleep, and enables autologin.
 - Prepares launchers, PowerDevil settings, and the first-login provisioner.
@@ -92,7 +111,7 @@ The second reboot loads immutable child-only KDE policy. Run verification as the
 parent:
 
 ```bash
-bash scripts/fedora/verify.sh
+sudo bash scripts/fedora/verify.sh
 ```
 
 Also verify graphically:
@@ -107,7 +126,9 @@ Also verify graphically:
 7. `https://nudity.testcategory.com/` is blocked.
 8. The parent account still has its normal desktop and administrative access.
 9. Wi-Fi can disconnect and reconnect, and `resolvectl status` still shows only
-   Cloudflare Family DNS afterward.
+   the selected Family DNS backend afterward. For NextDNS, also open
+   `https://test.nextdns.io` and confirm `status` is `ok`, `protocol` is `DOT`,
+   and the expected profile is reported.
 10. The Power launcher asks for confirmation before restart or shutdown.
 11. `Super+E` opens Dolphin, while `Ctrl+Alt+T` does not open a terminal.
 12. Open applications appear in the task manager and can be switched normally.
@@ -120,3 +141,18 @@ Also verify graphically:
 
 Test lid and power-key shutdown last because a successful test powers off the
 machine.
+
+## Change DNS backend
+
+DNS selection can be changed independently and safely rerun. To disable NextDNS
+and return to the default Cloudflare Family DNS, run:
+
+```bash
+sudo bash scripts/fedora/configure-dns.sh
+sudo bash scripts/fedora/verify.sh
+```
+
+To select a different NextDNS configuration, rerun `configure-dns.sh` with
+`--nextdns-profile` as shown above. Existing Wi-Fi and Ethernet connections are
+modified in place; the dispatcher applies the same selection to new profiles.
+The first saved pre-Chalkboard state remains the rollback source across reruns.

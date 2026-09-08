@@ -79,10 +79,16 @@ removed for a child who does not meet that age requirement.
 ## Network
 
 - Replaces DHCP-provided DNS on existing Wi-Fi and Ethernet profiles with
-  Cloudflare Families malware-and-adult-content resolvers.
+  Cloudflare Families malware-and-adult-content resolvers by default.
+- Optionally uses a parent-supplied NextDNS configuration ID instead of
+  Cloudflare; no ID is embedded and no third-party resolver binary is installed.
 - Configures IPv4 and IPv6 resolver addresses and the root routing domain.
-- Uses opportunistic authenticated DNS-over-TLS for reliability; plaintext
-  fallback still goes to the same Family resolver addresses.
+- Uses opportunistic authenticated DNS-over-TLS with Cloudflare. NextDNS uses
+  strict DNS-over-TLS because its TLS server name carries the configuration ID;
+  it does not silently fall back to unidentified plaintext DNS.
+- Strict NextDNS DNS-over-TLS is applied at the system-resolved level, so every
+  active link uses it. On networks that block outbound TCP port 853 the resolver
+  cannot be reached; recovery switches back to the Cloudflare default.
 - Reapplies policy to new NetworkManager connections through a dispatcher.
 - Disables Vivaldi Secure DNS so the browser uses the filtered system resolver.
 - Allows the child to connect to or disconnect from Wi-Fi through the restricted
@@ -91,6 +97,13 @@ removed for a child who does not meet that age requirement.
 DNS filtering does not inspect page content and cannot guarantee that every
 unsuitable site is blocked. Applications implementing DNS-over-HTTPS or a VPN
 can bypass host resolver policy unless separately restricted.
+
+NextDNS receives the device's DNS queries and source IP. Dashboard query logging,
+retention, storage location, and optional blocked-query logging are controlled by
+the parent in the selected NextDNS configuration and should be reviewed before
+opt-in. This integration does not send a device name or install NextDNS's root
+certificate. The configuration ID is visible in effective resolver settings to
+local users even though its local source file is root-only.
 
 ## Power
 

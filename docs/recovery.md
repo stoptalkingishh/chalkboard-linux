@@ -31,7 +31,16 @@ manually after confirming no data is needed.
 
 ## DNS failure
 
-If name resolution fails but SSH by IP still works, roll back. For a temporary
+NextDNS uses strict DNS-over-TLS, so networks that block TCP port 853 or captive
+portals that require DNS before sign-in can prevent resolution. From an offline
+repository checkout, switch back to Cloudflare without rerunning full deployment:
+
+```bash
+sudo bash scripts/fedora/configure-dns.sh
+sudo bash scripts/fedora/verify.sh
+```
+
+If name resolution still fails but SSH by IP works, roll back. For a temporary
 parent-only diagnostic, inspect:
 
 ```bash
@@ -45,6 +54,11 @@ Do not delete NetworkManager profiles. Their originals are stored under:
 ```text
 /var/lib/chalkboard/backup/files/etc/NetworkManager/system-connections/
 ```
+
+Full rollback restores the resolver drop-in, NextDNS profile file, dispatcher,
+installed DNS helper, and NetworkManager profiles from before the first
+Chalkboard DNS configuration. It does not alter or delete the parent's NextDNS
+account or cloud-side logs.
 
 ## Failed first login
 
