@@ -6,7 +6,7 @@
 - Configurable NextDNS backend as an alternative to Cloudflare Families
 - Scheduled device downtime and per-application allowances
 - Parent-activated single-application mode for younger children
-- Owned-media Lutris and Wine profiles for compatible retro games
+- Hardware testing of the optional owned-media Wine framework
 - Evaluation of community 3D Movie Maker ports and required original assets
 
 ## Design notes
@@ -21,6 +21,6 @@ secret keyboard shortcuts inside the child session. The child retains
 `Super+E` for file-management literacy, while direct KRunner and terminal
 shortcuts remain hidden.
 
-Retro-game automation will support only lawfully owned media. It will not ship
+Retro-game automation supports only lawfully owned media. It does not ship
 game data, cracked executables, or instructions whose purpose is bypassing copy
 protection.

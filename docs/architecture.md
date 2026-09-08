@@ -82,6 +82,17 @@ kiosk. External navigation, downloads, browser policy, and account behavior
 must be tested separately. Only official, currently available URLs should be
 included in the catalog.
 
+### Parent-owned retro software
+
+Optional Windows games use one Wine prefix per registration. A root-only parent
+workflow verifies parent-supplied installer bytes, runs setup without elevated
+privileges, and publishes a fixed child launcher only after the configured
+executable is present inside that prefix. Root-owned metadata contains paths,
+not shell commands. Wine prefixes are separation for manageability, not security
+sandboxes; the game still has the child account's file, device, and network
+access. No game media or title-specific circumvention/configuration belongs in
+this repository.
+
 ## Repository layout
 
 ```text

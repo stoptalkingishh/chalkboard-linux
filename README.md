@@ -88,3 +88,7 @@ important boundaries and limitations.
 Optional Fedora downtime schedules are installed and enabled separately. See
 [Fedora screen time](docs/screen-time.md); the framework is disabled by default
 and its example config contains no schedule.
+
+Parents may separately opt into the [retro-game framework](docs/retro-games.md)
+for lawfully owned media. It is not part of the default deployment, includes no
+game assets or circumvention tooling, and makes no title compatibility claims.

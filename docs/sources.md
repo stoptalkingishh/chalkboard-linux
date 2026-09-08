@@ -52,6 +52,10 @@ The ScratchJr browser-launcher decision was reviewed against these sources on
 - [Official ScratchJr application source](https://github.com/scratchfoundation/scratchjr)
 - [ScratchJr community browser port disclaimer](https://github.com/patdx/scratchjr)
 - [ScratchJr community desktop port disclaimer](https://github.com/jfo8000/ScratchJr-Desktop)
+- [Wine package for Fedora 43](https://packages.fedoraproject.org/pkgs/wine/wine/fedora-43.html)
+- [Wine desktop integration package for Fedora 43](https://packages.fedoraproject.org/pkgs/wine/wine-desktop/fedora-43.html)
+- [Lutris package for Fedora 43](https://packages.fedoraproject.org/pkgs/lutris/lutris/fedora-43.html)
+- [Wine security documentation](https://gitlab.winehq.org/wine/wine/-/wikis/FAQ#how-good-is-wine-at-sandboxing-windows-apps)
 
 The baseline video is [Saving My Child From Brainrot](https://youtu.be/Fk53XsGGxj8)
 by EposVox. It informs project goals but is not treated as platform documentation.

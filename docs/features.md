@@ -159,5 +159,7 @@ device works normally when its keyboard is attached.
   approximate location to a network provider and conflicts with offline-first
   operation. See the deployment runbook for the explicit opt-in.
 - Minecraft timing, retro CD-ROM support, and 3D Movie Maker: roadmap projects,
-  not part of the initial Fedora baseline.
+  not part of the initial Fedora baseline. Generic parent-owned Windows
+  installers have a separate optional Wine workflow, not a title-specific
+  compatibility profile.
 - BIOS changes: cannot be safely generalized or automated from this repository.

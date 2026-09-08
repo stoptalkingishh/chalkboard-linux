@@ -5,7 +5,9 @@ set -Eeuo pipefail
 while IFS= read -r script; do
   bash -n "$script"
   shellcheck -x -P SCRIPTDIR "$script"
-done < <(find scripts config -type f -name '*.sh' -print)
+done < <(find scripts config tests -type f -name '*.sh' -print)
+
+bash tests/retro-lib.sh
 
 python3 -m json.tool config/fedora/vivaldi-policy.json >/dev/null
 bash tests/dns-validation.sh
