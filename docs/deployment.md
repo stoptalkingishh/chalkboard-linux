@@ -57,6 +57,7 @@ Stage one performs the following operations:
 - Configures shutdown behavior, disables sleep, and enables autologin.
 - Prepares launchers, PowerDevil settings, and the first-login provisioner.
 - Stages but does not activate immutable KDE restrictions.
+- Installs Cage and the optional GCompris session without enabling it.
 
 When it succeeds, reboot:
 
@@ -156,3 +157,47 @@ To select a different NextDNS configuration, rerun `configure-dns.sh` with
 `--nextdns-profile` as shown above. Existing Wi-Fi and Ethernet connections are
 modified in place; the dispatcher applies the same selection to new profiles.
 The first saved pre-Chalkboard state remains the rollback source across reruns.
+
+## Optional single-app GCompris mode
+
+Only enable this after testing parent SSH and local-console login. The normal
+desktop remains the default until a parent runs:
+
+```bash
+sudo /usr/local/sbin/chalkboard-gcompris-mode enable
+sudo reboot
+```
+
+The command is idempotent. It checks that deployment, Cage, GCompris, the
+session files, and the unprivileged child account are present. It then installs
+a higher-priority SDDM autologin override atomically. It does not restart SDDM or
+terminate a current session.
+
+After reboot, SDDM starts a Cage Wayland session as `chalkboard`; Cage starts
+only `gcompris-qt --fullscreen --enable-kioskmode`. GCompris's kiosk option hides
+its normal quit and configuration paths. If GCompris or Cage exits, SDDM returns
+to the greeter because `Relogin=false`; it does not repeatedly restart a broken
+session. The next boot tries the session again.
+
+Verify the configured state from a parent shell:
+
+```bash
+sudo /usr/local/sbin/chalkboard-gcompris-mode status
+bash scripts/fedora/verify.sh
+```
+
+Also test that GCompris occupies the display, ordinary launcher and window
+switching shortcuts expose no host desktop, audio works, activities save state,
+the power key still performs the configured clean shutdown, and reboot returns
+to GCompris. Test `Ctrl+Alt+F3` parent login before relying on local recovery.
+
+Disable the mode from SSH or a parent text console:
+
+```bash
+sudo /usr/local/sbin/chalkboard-gcompris-mode disable
+sudo reboot
+```
+
+Disablement removes only the optional override and marker, revealing the normal
+Plasma autologin configuration. It is safe to repeat. Full rollback also
+disables this mode before restoring pre-deployment files.

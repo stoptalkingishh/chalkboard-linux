@@ -15,6 +15,10 @@ if [[ -x /usr/local/libexec/chalkboard-screen-time ]]; then
   /usr/local/libexec/chalkboard-screen-time force-release
 fi
 
+# Disable the optional session before restoring the original SDDM configuration.
+rm -f /etc/sddm.conf.d/95-chalkboard-gcompris.conf
+rm -f "$STATE_DIR/gcompris-mode-enabled"
+
 log "restoring files that existed before deployment"
 while IFS= read -r backup; do
   target="/${backup#"$BACKUP_DIR/files/"}"

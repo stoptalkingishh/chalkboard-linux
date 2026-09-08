@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Chalkboard GCompris
+Comment=Parent-enabled single-application GCompris session
+Exec=/usr/local/libexec/chalkboard-gcompris-session
+TryExec=/usr/local/libexec/chalkboard-gcompris-session
+Type=Application
+DesktopNames=Chalkboard-GCompris

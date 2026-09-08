@@ -58,6 +58,13 @@ Plasma Keyboard, KScreen, and `iio-sensor-proxy`. Plasma Mobile is not used
 because it is a separate phone-oriented session rather than an adaptive laptop
 mode, and traditional desktop applications remain part of this project.
 
+The optional GCompris mode is a separate SDDM Wayland session using Fedora's
+packaged Cage kiosk compositor. Cage launches GCompris as its sole client, so
+Plasma, its launchers, and its window-management shortcuts are not present. This
+reduces ordinary accidental escape paths but remains an interface restriction,
+not a security boundary. The unprivileged account and Linux permissions remain
+the security boundary.
+
 Instead of a full system tray, the child panel explicitly provides running
 windows, removable devices, notifications, Bluetooth, volume, Wi-Fi, battery,
 and confirmed power actions. A documented parent recovery path remains required.

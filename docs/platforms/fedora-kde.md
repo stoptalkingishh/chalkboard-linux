@@ -59,6 +59,8 @@ so that immutable policy is not applied before Plasma has generated its layout.
 - Parent recovery uses SSH or a local text console.
 - Optional child downtime is root-controlled, separately installed, and
   disabled until a parent configures and enables it.
+- Optional single-app GCompris mode uses Fedora's Cage package and must be
+  enabled explicitly by root; Plasma remains the default.
 
 See the [deployment runbook](../deployment.md) and
 [recovery guide](../recovery.md).
