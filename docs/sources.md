@@ -43,5 +43,15 @@ The implementation was validated against these upstream references on
 - [`loginctl terminate-user`](https://man7.org/linux/man-pages/man1/loginctl.1.html)
 - [systemd timer behavior](https://man7.org/linux/man-pages/man5/systemd.timer.5.html)
 
+The ScratchJr browser-launcher decision was reviewed against these sources on
+2026-09-08:
+
+- [Official ScratchJr website source](https://github.com/scratchfoundation/scratchjr-website)
+- [Official ScratchJr website routes](https://github.com/scratchfoundation/scratchjr-website/blob/18700d3a5615355ac7bf6098e154bb2dccf56712/src/routes.json)
+- [Official ScratchJr device FAQ](https://github.com/scratchfoundation/scratchjr-website/blob/18700d3a5615355ac7bf6098e154bb2dccf56712/src/views/about/faq.jsx)
+- [Official ScratchJr application source](https://github.com/scratchfoundation/scratchjr)
+- [ScratchJr community browser port disclaimer](https://github.com/patdx/scratchjr)
+- [ScratchJr community desktop port disclaimer](https://github.com/jfo8000/ScratchJr-Desktop)
+
 The baseline video is [Saving My Child From Brainrot](https://youtu.be/Fk53XsGGxj8)
 by EposVox. It informs project goals but is not treated as platform documentation.

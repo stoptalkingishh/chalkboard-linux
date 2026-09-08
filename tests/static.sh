@@ -72,3 +72,13 @@ if grep -RIE --exclude-dir=.git '[0-9a-f]{6}\.dns\.nextdns\.io' \
   printf 'Possible embedded NextDNS configuration ID found.\n' >&2
   exit 1
 fi
+
+# Reject executable automation only. The separator-tolerant pattern covers
+# "scratchjr", "Scratch Jr", "scratch-jr", and "scratch_jr". Documentation and
+# future re-verification text belong in docs/ or tests/, which are not scanned.
+# When all ScratchJr acceptance criteria pass, this check must be removed along
+# with the launcher addition.
+if grep -RIEi 'scratch[ _-]?jr' config scripts; then
+  printf 'ScratchJr executable automation requires renewed trust review.\n' >&2
+  exit 1
+fi
