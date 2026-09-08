@@ -16,10 +16,12 @@
 
 - Uses Plasma Desktop's built-in automatic tablet mode rather than a custom
   shell or custom QML.
-- Uses KDE's full-screen Application Dashboard and an Icons-only Task Manager
-  with a small set of favorites and normal running-window switching.
-- Keeps ordinary Dashboard application browsing, but removes recent documents,
-  extra search runners, and Konsole from the child-facing menu.
+- Uses KDE's full-screen Application Dashboard and an Icons-only Task Manager.
+  The Dashboard lists every approved application as a favorite for labeled
+  discovery, while the compact task-panel launchers keep a small set of primary
+  shortcuts. Normal running-window switching remains.
+- Keeps ordinary Dashboard application browsing, but removes recent documents
+  and extra search runners from the child-facing menu.
 - Curates the Application Dashboard to an explicit allowlist: every installed
   application that is not in `config/fedora/app-allowlist.txt` is hidden. This
   removes Fedora/KDE system tools, the software center, email/chat clients, and

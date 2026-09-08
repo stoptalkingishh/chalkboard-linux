@@ -15,7 +15,7 @@ MARKER="$CHILD_HOME/.local/state/chalkboard/plasma-provisioned"
 [[ -f "$MARKER" ]] || die "Plasma has not finished first-login provisioning"
 
 log "locking down the child app menu to the curated allowlist"
-"$SCRIPT_DIR/curate-app-menu.sh" "$CHILD_USER"
+bash "$SCRIPT_DIR/curate-app-menu.sh" "$CHILD_USER"
 
 log "installing immutable child-only KDE policy"
 backup_file /etc/xdg/chalkboard/kdeglobals

@@ -8,7 +8,22 @@ panel.height = 68;
 panel.hiding = "none";
 panel.lengthMode = "fill";
 
-const favorites = [
+const dashboardFavorites = [
+    "applications:chalkboard-browser.desktop",
+    "applications:chalkboard-coolmath-games.desktop",
+    "applications:chalkboard-cutemaze.desktop",
+    "applications:chalkboard-gcompris.desktop",
+    "applications:chalkboard-kcalc.desktop",
+    "applications:chalkboard-kidpix.desktop",
+    "applications:chalkboard-kmines.desktop",
+    "applications:chalkboard-kolourpaint.desktop",
+    "applications:chalkboard-ktuberling.desktop",
+    "applications:chalkboard-writer.desktop",
+    "applications:chalkboard-teach-your-monster.desktop",
+    "preferred://filemanager"
+];
+
+const panelLaunchers = [
     "applications:chalkboard-gcompris.desktop",
     "applications:chalkboard-kidpix.desktop",
     "applications:chalkboard-writer.desktop",
@@ -19,14 +34,13 @@ const favorites = [
 
 const dashboard = panel.addWidget("org.kde.plasma.kickerdash");
 dashboard.currentConfigGroup = ["General"];
-dashboard.writeConfig("favoriteApps", favorites.join(","));
-dashboard.writeConfig("hiddenApplications", "org.kde.konsole.desktop");
+dashboard.writeConfig("favoriteApps", dashboardFavorites.join(","));
 dashboard.writeConfig("showRecentDocs", false);
 dashboard.writeConfig("useExtraRunners", false);
 
 const tasks = panel.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
-tasks.writeConfig("launchers", favorites.join(","));
+tasks.writeConfig("launchers", panelLaunchers.join(","));
 tasks.writeConfig("iconSpacing", 2);
 tasks.writeConfig("showOnlyCurrentActivity", true);
 tasks.writeConfig("showOnlyCurrentDesktop", true);
