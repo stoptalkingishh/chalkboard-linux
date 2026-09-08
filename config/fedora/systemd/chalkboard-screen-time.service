@@ -1,0 +1,15 @@
+[Unit]
+Description=Apply the Chalkboard screen-time schedule
+Documentation=file:/usr/local/share/doc/chalkboard/screen-time.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/chalkboard-screen-time enforce
+TimeoutStartSec=3min
+PrivateTmp=yes
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes

@@ -135,6 +135,11 @@ check "Icons-only Task Manager was provisioned" grep -Fq \
   'plugin=org.kde.plasma.icontasks' \
   /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc
 check "immutable KDE policy is finalized" test -f /var/lib/chalkboard/finalized
+if [[ -x /usr/local/libexec/chalkboard-screen-time ]]; then
+  check "screen-time configuration is valid" /usr/local/libexec/chalkboard-screen-time check
+  check "screen-time config is root-owned and private" bash -c \
+    "[[ \$(stat -c '%u %a' /etc/chalkboard/screen-time.conf) == '0 600' ]]"
+fi
 
 printf '\nFailures: %s\n' "$failures"
 exit "$failures"

@@ -1,3 +1,5 @@
 .chalkboard/
 *.bak
 *.log
+__pycache__/
+*.py[cod]

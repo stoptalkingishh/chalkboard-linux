@@ -12,6 +12,11 @@ these parent paths for administration:
 
 The parent account is not subject to `/etc/xdg/chalkboard` policy.
 
+If optional screen-time downtime is active, the parent account remains usable.
+Run `sudo chalkboard-screen-time disable` from SSH or the text console to stop
+the timer and restore the child account's prior expiry. See the dedicated
+[screen-time recovery procedure](screen-time.md#disable-and-recover).
+
 ## Roll back configuration
 
 From the repository checkout, run:

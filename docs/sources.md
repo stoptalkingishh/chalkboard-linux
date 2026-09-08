@@ -28,6 +28,14 @@ The implementation was validated against these upstream references on
 - [Duolingo ABC on Android](https://play.google.com/store/apps/details?id=com.duolingo.literacy)
 - [Vivaldi profile and First Run behavior](https://help.vivaldi.com/desktop/install-update/full-reset-of-vivaldi/)
 - [Coolmath Games privacy and age statement](https://www.coolmathgames.com/privacyp)
+- [Fedora 43 malcontent package](https://packages.fedoraproject.org/pkgs/malcontent/malcontent/fedora-43.html)
+- [Fedora package search (no timekpr-next result)](https://packages.fedoraproject.org/search?query=timekpr-next)
+- [Fedora 43 libnotify package](https://packages.fedoraproject.org/pkgs/libnotify/libnotify/fedora-43.html)
+- [Fedora 43 SDDM package and PAM files](https://packages.fedoraproject.org/pkgs/sddm/sddm/fedora-43.html)
+- [shadow account-expiration format](https://man7.org/linux/man-pages/man5/shadow.5.html)
+- [`chage` account expiration](https://man7.org/linux/man-pages/man1/chage.1.html)
+- [`loginctl terminate-user`](https://man7.org/linux/man-pages/man1/loginctl.1.html)
+- [systemd timer behavior](https://man7.org/linux/man-pages/man5/systemd.timer.5.html)
 
 The baseline video is [Saving My Child From Brainrot](https://youtu.be/Fk53XsGGxj8)
 by EposVox. It informs project goals but is not treated as platform documentation.
