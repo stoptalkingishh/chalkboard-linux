@@ -123,7 +123,7 @@ else
   check "Cloudflare Family DNS is configured" cloudflare_is_configured
   check "Cloudflare drop-in is in effect" cloudflare_dropin_effective
 fi
-if systemctl is-enabled suspend.target 2>/dev/null | grep -qx masked; then
+if [[ "$(systemctl is-enabled suspend.target 2>/dev/null)" == masked ]]; then
   printf 'PASS  suspend target is masked\n'
 else
   printf 'FAIL  suspend target is not masked\n'
