@@ -102,7 +102,9 @@ documents before testing the cover or power button.
 
 ## Intentionally excluded
 
-- ScratchJr: no supported official web application was confirmed.
+- ScratchJr: no supported official web application was confirmed. The
+  [candidate research and acceptance criteria](scratchjr-web-research.md)
+  explain why unofficial browser ports are not installed.
 - Khan Academy Kids: supported on iOS, Android, and Amazon Fire, but not as a
   Fedora or browser app.
 - Duolingo ABC: supported on iPhone/iPad and Android, but not as a Fedora or

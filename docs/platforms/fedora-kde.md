@@ -70,5 +70,6 @@ See the [deployment runbook](../deployment.md) and
   only `resolved.conf` is not sufficient verification.
 - Disabling the application launcher is not the same as disabling every shortcut
   that uses the Super/Meta key.
-- ScratchJr should not be listed as a web app until an official supported web
-  version is confirmed.
+- ScratchJr should not be listed as a web app until the
+  [publisher, maintenance, and browser verification criteria](../scratchjr-web-research.md)
+  are all satisfied.
