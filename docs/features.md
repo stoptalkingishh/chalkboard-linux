@@ -35,6 +35,24 @@
 KDE policy keeps the simplified layout consistent; it is not a security sandbox.
 The separate non-admin account is the primary privilege boundary.
 
+## Optional single-app mode
+
+- Installs Fedora's Cage Wayland kiosk compositor and a dedicated SDDM session,
+  but leaves the normal child Plasma session selected by default.
+- Requires an explicit root command to enable or disable the mode.
+- Runs GCompris fullscreen with its own kiosk option as Cage's only client.
+- Provides no Plasma shell, panel, launcher, task switcher, or desktop shortcuts.
+- Allows VT switching so a parent can recover from a local text console.
+- Does not automatically relaunch a failed or exited session; SDDM displays its
+  greeter instead, avoiding a crash/relogin loop.
+- Returns to GCompris after a normal power cycle while enabled and returns to
+  Plasma after the parent disables it and reboots.
+
+This mode does not sandbox GCompris, harden the kernel, block physical boot-media
+access, or protect data that the `chalkboard` Unix account can already access.
+GCompris activities, file dialogs, accessibility behavior, and future upstream
+changes require graphical testing.
+
 ## Applications
 
 Native Fedora packages:
