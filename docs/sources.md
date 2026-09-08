@@ -1,9 +1,13 @@
 # Technical sources
 
 The implementation was validated against these upstream references on
-2026-09-06:
+2026-09-07:
 
 - [KDE Plasma desktop scripting](https://develop.kde.org/docs/plasma/scripting/)
+- [KDE Plasma scripting API](https://develop.kde.org/docs/plasma/scripting/api/)
+- [KDE Plasma Mobile project](https://plasma-mobile.org/)
+- [Fedora Plasma Keyboard package](https://packages.fedoraproject.org/pkgs/plasma-keyboard/plasma-keyboard/fedora-43.html)
+- [KWin automatic tablet-mode implementation](https://github.com/KDE/kwin/blob/Plasma/6.4/src/tabletmodemanager.cpp)
 - [KDE Kiosk introduction](https://develop.kde.org/docs/administration/kiosk/introduction/)
 - [KDE Kiosk keys](https://develop.kde.org/docs/administration/kiosk/keys/)
 - [systemd logind configuration](https://www.freedesktop.org/software/systemd/man/latest/logind.conf.html)

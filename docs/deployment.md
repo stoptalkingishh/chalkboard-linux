@@ -97,8 +97,8 @@ bash scripts/fedora/verify.sh
 
 Also verify graphically:
 
-1. The panel contains approved launchers, running windows, device controls,
-   power, and a clock.
+1. The panel contains Application Dashboard, curated favorites, running windows,
+   device controls, power, and a clock.
 2. Meta, `Alt+F1`, `Alt+F2`, and `Alt+Space` do not open a launcher.
 3. Right-clicking the desktop or panel cannot enter edit mode.
 4. Every launcher starts successfully.
@@ -111,6 +111,12 @@ Also verify graphically:
 10. The Power launcher asks for confirmation before restart or shutdown.
 11. `Super+E` opens Dolphin, while `Ctrl+Alt+T` does not open a terminal.
 12. Open applications appear in the task manager and can be switched normally.
+13. Touching a text field opens Plasma Keyboard when the hardware keyboard is
+    detached or tablet mode is active.
+14. Rotating the tablet rotates the internal display when the hardware sensor
+    reports orientation changes.
+15. The internal display uses 175% scaling and remains usable with the keyboard
+    attached.
 
 Test lid and power-key shutdown last because a successful test powers off the
 machine.

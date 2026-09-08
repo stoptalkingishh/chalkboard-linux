@@ -26,8 +26,8 @@ printf '%s\n' "$CHILD_USER" >"$STATE_DIR/child-user"
 
 log "installing Fedora applications"
 dnf -y install \
-  bluedevil curl flatpak gnupg2 kdialog plasma-nm plasma-pa \
-  plasma-systemsettings qt6-qttools \
+  bluedevil curl flatpak gnupg2 iio-sensor-proxy kdialog plasma-keyboard \
+  plasma-nm plasma-pa plasma-systemsettings qt6-qttools \
   gcompris-qt kolourpaint kcalc libreoffice-writer ktuberling kmines
 
 log "configuring the authenticated Vivaldi repository"
@@ -101,6 +101,14 @@ install -o "$CHILD_USER" -g "$CHILD_USER" -m 0600 \
 install -o "$CHILD_USER" -g "$CHILD_USER" -m 0644 \
   "$REPO_ROOT/config/fedora/first-login.desktop" \
   "$CHILD_HOME/.config/autostart/chalkboard-first-login.desktop"
+
+runuser -u "$CHILD_USER" -- env HOME="$CHILD_HOME" \
+  kwriteconfig6 --file kwinrc --group Input --key TabletMode auto
+runuser -u "$CHILD_USER" -- env HOME="$CHILD_HOME" \
+  kwriteconfig6 --file kwinrc --group Wayland --key InputMethod \
+  /usr/share/applications/org.kde.plasma.keyboard.desktop
+runuser -u "$CHILD_USER" -- env HOME="$CHILD_HOME" \
+  kwriteconfig6 --file kwinrc --group Wayland --key VirtualKeyboardEnabled true
 
 for desktop_file in "$REPO_ROOT"/config/fedora/launchers/*.desktop; do
   install -o "$CHILD_USER" -g "$CHILD_USER" -m 0644 "$desktop_file" \

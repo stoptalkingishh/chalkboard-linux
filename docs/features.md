@@ -14,11 +14,16 @@
 
 ## Desktop
 
-- Creates one large bottom panel with approved application launchers, running
-  windows, device controls, and a clock.
-- Removes the application launcher and full system tray.
-- Adds a task manager for normal window switching without restoring the
-  application launcher.
+- Uses Plasma Desktop's built-in automatic tablet mode rather than a custom
+  shell or custom QML.
+- Uses KDE's full-screen Application Dashboard and an Icons-only Task Manager
+  with a small set of favorites and normal running-window switching.
+- Keeps ordinary Dashboard application browsing, but removes recent documents,
+  extra search runners, and Konsole from the child-facing menu.
+- Uses a 68-pixel panel and 175% scaling on the high-density internal display.
+- Enables Plasma Keyboard for touch text entry and `iio-sensor-proxy` for
+  supported automatic rotation.
+- Removes the traditional application menu and full system tray.
 - Adds standalone removable-device, notification, Bluetooth, volume, Wi-Fi, and
   battery widgets without restoring the full system tray.
 - Adds a touch-friendly power menu that requires confirmation before shutdown or
@@ -99,6 +104,11 @@ can bypass host resolver policy unless separately restricted.
 
 The HP Elite x2 is detachable and may not generate a lid event. Always close
 documents before testing the cover or power button.
+
+Its touchscreen, Wacom pen/finger input, touchpad, lid switch, tablet-mode
+switches, 2736x1824 internal display, and active orientation sensor service were
+confirmed during development. Plasma Desktop remains the session so the same
+device works normally when its keyboard is attached.
 
 ## Intentionally excluded
 

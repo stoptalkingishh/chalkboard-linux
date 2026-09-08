@@ -4,32 +4,33 @@ for (const existingPanel of panels()) {
 
 const panel = new Panel;
 panel.location = "bottom";
-panel.height = 72;
+panel.height = 68;
 panel.hiding = "none";
 panel.lengthMode = "fill";
 
-const launchers = [
-    "chalkboard-gcompris.desktop",
-    "chalkboard-kidpix.desktop",
-    "chalkboard-kolourpaint.desktop",
-    "chalkboard-writer.desktop",
-    "chalkboard-teach-your-monster.desktop",
-    "chalkboard-coolmath-games.desktop",
-    "chalkboard-ktuberling.desktop",
-    "chalkboard-cutemaze.desktop",
-    "chalkboard-kmines.desktop",
-    "chalkboard-kcalc.desktop",
-    "chalkboard-browser.desktop"
+const favorites = [
+    "applications:chalkboard-gcompris.desktop",
+    "applications:chalkboard-kidpix.desktop",
+    "applications:chalkboard-writer.desktop",
+    "applications:chalkboard-teach-your-monster.desktop",
+    "applications:chalkboard-coolmath-games.desktop",
+    "preferred://filemanager"
 ];
 
-for (const desktopFile of launchers) {
-    const launcher = panel.addWidget("org.kde.plasma.icon");
-    launcher.currentConfigGroup = ["General"];
-    launcher.writeConfig("url", "file:///home/chalkboard/.local/share/applications/" + desktopFile);
-    launcher.writeConfig("localPath", "/home/chalkboard/.local/share/applications/" + desktopFile);
-}
+const dashboard = panel.addWidget("org.kde.plasma.kickerdash");
+dashboard.currentConfigGroup = ["General"];
+dashboard.writeConfig("favoriteApps", favorites.join(","));
+dashboard.writeConfig("hiddenApplications", "org.kde.konsole.desktop");
+dashboard.writeConfig("showRecentDocs", false);
+dashboard.writeConfig("useExtraRunners", false);
 
-panel.addWidget("org.kde.plasma.taskmanager");
+const tasks = panel.addWidget("org.kde.plasma.icontasks");
+tasks.currentConfigGroup = ["General"];
+tasks.writeConfig("launchers", favorites.join(","));
+tasks.writeConfig("iconSpacing", 2);
+tasks.writeConfig("showOnlyCurrentActivity", true);
+tasks.writeConfig("showOnlyCurrentDesktop", true);
+
 panel.addWidget("org.kde.plasma.panelspacer");
 panel.addWidget("org.kde.plasma.devicenotifier");
 panel.addWidget("org.kde.plasma.notifications");

@@ -21,6 +21,13 @@ done
 qdbus-qt6 org.kde.plasmashell /PlasmaShell \
   org.kde.PlasmaShell.evaluateScript "$(<"$PANEL_SCRIPT")"
 
+# The internal 2736x1824 display is high density. KScreen applies this through
+# its supported output API and retains it across laptop and tablet modes.
+if kscreen-doctor -o 2>/dev/null | grep -q 'eDP-1'; then
+  kscreen-doctor output.eDP-1.scale.1.75 || \
+    printf '[chalkboard] unable to apply preferred internal-display scale\n'
+fi
+
 # KWin exposes touchpad settings through its user-session D-Bus API. A
 # detachable without a connected touchpad legitimately returns no devices.
 while IFS= read -r device; do

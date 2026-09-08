@@ -51,6 +51,11 @@ The child session remains a normal multitasking desktop. Policy fixes the panel
 layout and hides advanced launch paths; it does not block ordinary application
 behavior or replace Linux account permissions.
 
+Convertible devices use Plasma Desktop's packaged automatic tablet mode,
+Plasma Keyboard, KScreen, and `iio-sensor-proxy`. Plasma Mobile is not used
+because it is a separate phone-oriented session rather than an adaptive laptop
+mode, and traditional desktop applications remain part of this project.
+
 Instead of a full system tray, the child panel explicitly provides running
 windows, removable devices, notifications, Bluetooth, volume, Wi-Fi, battery,
 and confirmed power actions. A documented parent recovery path remains required.
