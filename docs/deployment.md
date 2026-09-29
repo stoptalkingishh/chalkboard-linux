@@ -54,7 +54,10 @@ Stage one performs the following operations:
 - Applies the selected Family DNS backend to NetworkManager Wi-Fi and Ethernet
   profiles.
 - Installs Vivaldi managed policy.
-- Configures shutdown behavior, disables sleep, and enables autologin.
+- Configures shutdown behavior and disables sleep system-wide, for every
+  account including the parent's, and enables autologin. Only `rollback.sh`
+  restores suspend.
+- Curates the child Dashboard to the allowlist at finalization, not here.
 - Prepares launchers, PowerDevil settings, and the first-login provisioner.
 - Stages but does not activate immutable KDE restrictions.
 - Installs the optional weather controls, but leaves weather disabled and does
@@ -82,6 +85,22 @@ Its log is:
 
 Do not finalize if the panel does not contain the expected launchers and clock.
 Use the recovery guide to inspect the log first.
+
+## Optional features
+
+None of these are part of the default baseline. Each is installed or documented
+separately and is safe to skip:
+
+- [Optional weather](#optional-weather) - keyless NOAA widget, must be
+  configured before finalization
+- [Optional single-app GCompris mode](#optional-single-app-gcompris-mode) -
+  parent-enabled Cage session, installed but disabled by stage one
+- Screen time - see [screen-time.md](screen-time.md); installed with
+  `scripts/fedora/install-screen-time.sh`, disabled until a parent configures
+  and enables it
+- App-menu curation - applied by `finalize-lockdown.sh`; see
+  [Finalize](#finalize)
+- [Retro games](retro-games.md) - optional, not run by `deploy.sh`
 
 ## Optional weather
 
@@ -126,9 +145,12 @@ The RPM remains installed, consistent with the repository's non-destructive
 rollback policy.
 
 Configure weather before immutable policy is finalized. After
-`finalize-lockdown.sh` runs, the locked shell no longer accepts the D-Bus panel
-scripting that reconciliation uses, so `chalkboard-weather` refuses changes and
-full rollback is the only recovery path for a finalized installation.
+`finalize-lockdown.sh` runs, `chalkboard-weather` refuses changes because
+`weather.sh` finds the marker file `/var/lib/chalkboard/finalized` that
+finalization creates. This is a marker test in the script, not a consequence of
+the locked shell rejecting D-Bus panel scripting; that separate question is
+untested and needs graphical verification. Full rollback is the only recovery
+path for a finalized installation.
 
 ## Parent commissioning
 
@@ -157,8 +179,22 @@ sudo bash scripts/fedora/finalize-lockdown.sh
 sudo reboot
 ```
 
-The second reboot loads immutable child-only KDE policy. Run verification as the
-parent:
+The second reboot loads immutable child-only KDE policy. The same command also
+curates the child Application Dashboard to `config/fedora/app-allowlist.txt`:
+every installed application that is not in that file is hidden. There is no
+separate curation step and no un-hide command.
+
+To change the child's app set afterwards, edit
+`config/fedora/app-allowlist.txt` in the repository checkout and rerun
+`finalize-lockdown.sh` followed by a reboot. The hidden list is recomputed from
+the allowlist and the currently installed applications, so the command is safe
+to repeat. Because it is a snapshot taken at finalization time, an application
+installed after that point is not hidden and remains visible to the child
+until finalization runs again. Full rollback restores the pre-deployment applet
+configuration and removes the curation entirely. See the
+[app-menu curation recovery procedure](recovery.md#app-menu-curation-recovery).
+
+Run verification as the parent:
 
 ```bash
 sudo bash scripts/fedora/verify.sh

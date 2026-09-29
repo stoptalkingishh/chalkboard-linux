@@ -68,10 +68,17 @@ removed. The optional `kdeplasma-addons` RPM is retained with other packages.
 ## Weather recovery
 
 Configure weather with `chalkboard-weather enable` before running
-`finalize-lockdown.sh`. After finalization the child desktop is immutable and
-the weather command refuses further changes, because the locked shell no longer
-accepts the D-Bus panel scripting that would add or remove the widget. Full
-rollback remains the recovery path for a finalized installation.
+`finalize-lockdown.sh`. After finalization the command refuses further changes
+because `scripts/fedora/weather.sh` checks for the marker file
+`/var/lib/chalkboard/finalized`, which `finalize-lockdown.sh` creates; the
+refusal is a marker test, not a consequence of the locked shell. Full rollback
+remains the recovery path for a finalized installation.
+
+`scripts/fedora/weather-session.sh` separately assumes the immutable policy may
+block the D-Bus panel scripting that adds or removes the widget, and exits
+quietly if that call fails. Whether `plasma-desktop/scripting_console=false`
+actually blocks `org.kde.PlasmaShell.evaluateScript` over D-Bus is not covered
+by any automated test and requires graphical verification.
 
 Weather changes are applied at child login, not directly from the parent shell.
 For a provider failure or privacy rollback before finalization, run:
@@ -95,6 +102,32 @@ If the log reports that it cannot identify the baseline panel, do not edit
 `plasma-org.kde.plasma.desktop-appletsrc` by hand. Disable weather first. Use
 full rollback if the baseline panel itself is damaged.
 
+## App-menu curation recovery
+
+Curation is as irreversible as weather and has no dedicated command to undo it.
+`finalize-lockdown.sh` runs `scripts/fedora/curate-app-menu.sh`, which writes a
+static list of hidden application IDs into the child's kickerdash
+configuration. There is no un-hide command.
+
+To change the set of applications the child can see, edit
+`config/fedora/app-allowlist.txt` in the repository checkout and re-run
+finalization as the parent:
+
+```bash
+sudo bash scripts/fedora/finalize-lockdown.sh
+sudo reboot
+```
+
+The script requires the first-login `plasma-provisioned` marker and is safe to
+repeat. It recomputes the hidden list from the allowlist and the applications
+currently installed, so an entry added to the allowlist reappears and one
+removed disappears. Because the hidden list is a snapshot, an application
+installed after finalization is not in it and stays visible until finalization
+runs again.
+
+Full rollback restores the pre-deployment applet configuration, which removes
+the curation entirely.
+
 ## DNS failure
 
 NextDNS uses strict DNS-over-TLS, so networks that block TCP port 853 or captive
@@ -105,6 +138,18 @@ repository checkout, switch back to Cloudflare without rerunning full deployment
 sudo bash scripts/fedora/configure-dns.sh
 sudo bash scripts/fedora/verify.sh
 ```
+
+Cloudflare can also fail, but differently. It uses opportunistic
+DNS-over-TLS, so a network that blocks TCP port 853 normally downgrades to
+plaintext DNS rather than failing outright: resolution continues, but
+unencrypted, and there is no unfiltered fallback resolver to restore either. If
+Cloudflare itself is unreachable or the network intercepts DNS, use the same
+temporary diagnostic and rollback steps below.
+
+Switching to Cloudflare is itself a change that is easy to mistake for the
+original state. It renames the NextDNS profile file instead of deleting it, and
+re-running `configure-dns.sh` does not remove that renamed copy. See the limits
+noted under the rollback description below.
 
 If name resolution still fails but SSH by IP works, roll back. For a temporary
 parent-only diagnostic, inspect:
@@ -121,10 +166,33 @@ Do not delete NetworkManager profiles. Their originals are stored under:
 /var/lib/chalkboard/backup/files/etc/NetworkManager/system-connections/
 ```
 
-Full rollback restores the resolver drop-in, NextDNS profile file, dispatcher,
+Full rollback restores the resolver drop-in, the NextDNS profile file as it
+existed before the first Chalkboard DNS configuration, the dispatcher, the
 installed DNS helper, and NetworkManager profiles from before the first
 Chalkboard DNS configuration. It does not alter or delete the parent's NextDNS
 account or cloud-side logs.
+
+Two limits are worth knowing before relying on this path:
+
+- Switching back to Cloudflare renames `/etc/chalkboard/nextdns-profile` to
+  `nextdns-profile.disabled-<timestamp>` rather than deleting it. That renamed
+  file is never backed up, so full rollback does not remove it. It is
+  root-owned and mode `0600`, and `apply-family-dns.sh` only enables NextDNS
+  when the original handover file is present, so it is inert. Remove it
+  manually if the parent wants the directory returned to its original state.
+- `configure-dns.sh` calls `backup_file` on the `/etc/NetworkManager/
+  system-connections` directory, but `rollback.sh` walks only regular files
+  under the backup tree. If that directory was empty at first deployment, only a
+  `.missing` marker was saved and the profile restore silently does nothing.
+  Confirm the backup directory is non-empty before relying on it:
+
+```bash
+sudo find /var/lib/chalkboard/backup/files/etc/NetworkManager \
+  -type f -print
+```
+
+If that prints nothing, keep your own copy of the connection files before
+relying on the automatic restore.
 
 ## Failed first login
 

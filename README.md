@@ -22,6 +22,8 @@ hardware.
 ## Safety model
 
 - The parent account remains the only administrator.
+- Deployment disables suspend system-wide, so the parent loses it too; only
+  full rollback restores it.
 - A child uses a separate unprivileged account.
 - Changes must be inspectable, repeatable, and reversible.
 - Network filtering is a useful guardrail, not a complete security boundary.
@@ -69,6 +71,21 @@ After reboot and first-login provisioning, apply the immutable child policy:
 sudo bash scripts/fedora/finalize-lockdown.sh
 sudo reboot
 ```
+
+Finalization is effectively one-way for two features. Configure the optional
+[weather widget](docs/deployment.md#optional-weather) and the
+[screen-time schedule](docs/screen-time.md) before running
+`finalize-lockdown.sh`. After it runs, `chalkboard-weather` refuses changes
+because the finalized marker file exists, and the child's Dashboard is curated
+to `config/fedora/app-allowlist.txt` with no un-hide command. Full rollback is
+the only way to recover from a wrong weather location or app set. Screen time
+can still be installed and enabled afterwards, since it is a separate root-only
+framework, but installing it after lockdown means working over SSH or the text
+console rather than the child desktop.
+
+Finalization also curates the app menu. To change the child's applications
+afterwards, edit `config/fedora/app-allowlist.txt` and rerun
+`finalize-lockdown.sh`.
 
 An optional parent-enabled mode can replace the child Plasma session with a
 single GCompris session. It is installed but disabled by default; see the

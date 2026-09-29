@@ -6,7 +6,8 @@
 - Keeps the child account out of `wheel` and `sudo`.
 - Locks password authentication for the child account.
 - Configures SDDM to autologin to the Plasma Wayland session after boot.
-- Leaves the parent account and its desktop settings unchanged.
+- Leaves the parent account and its Plasma configuration unchanged, but not
+  the system-wide power policy; see the Power section.
 - Disables automatic screen locking because a password-locked autologin account
   could not unlock itself.
 - Disables KDE Wallet and Vivaldi password saving to avoid wallet prompts or
@@ -26,7 +27,9 @@
   application that is not in `config/fedora/app-allowlist.txt` is hidden. This
   removes Fedora/KDE system tools, the software center, email/chat clients, and
   development utilities while keeping the curated applications, the browser, and
-  Dolphin.
+  Dolphin. `deploy.sh` does not install `dolphin`; the allowlist entry for
+  `org.kde.dolphin.desktop` relies on Dolphin already being present on the
+  Fedora KDE image, and `Super+E` opens it only if it is installed.
 - Uses a 68-pixel panel and 175% scaling on the high-density internal display.
 - Enables Plasma Keyboard for touch text entry and `iio-sensor-proxy` for
   supported automatic rotation.
@@ -38,16 +41,24 @@
 - Disables KRunner, terminal, and application-launcher shortcuts in the child
   session while preserving `Super+E` for Dolphin file management.
 - Disables panel editing and desktop scripting through immutable KDE policy.
+  The policy is installed at finalization and applies to the child session only;
+  the parent is not restricted by `/etc/xdg/chalkboard`. Whether
+  `plasma-desktop/scripting_console=false` also blocks
+  `org.kde.PlasmaShell.evaluateScript` over D-Bus is not covered by any
+  automated test and requires graphical verification.
 - Preserves normal application behavior, file dialogs, multitasking, and window
   management.
 - Attempts to disable tap-to-click for each touchpad exposed by KWin during the
   first child session. Detachable hardware may expose no touchpad while its
   keyboard cover is disconnected.
 - Optionally adds Fedora's packaged KDE weather widget only after a parent
-  explicitly selects the NOAA provider and a station. Weather remains disabled
-  by default, can change only before `finalize-lockdown.sh`, and is removed
-  cleanly when disabled.
-  by default and does not alter baseline panel provisioning.
+  explicitly selects the NOAA provider and a station. The widget is disabled by
+  default, does not alter baseline panel provisioning, and is removed cleanly
+  when disabled.
+- Refuses weather changes once `/var/lib/chalkboard/finalized` exists, because
+  `finalize-lockdown.sh` creates that marker. This is a marker-file check in
+  `scripts/fedora/weather.sh`, not a consequence of the locked shell; see the
+  recovery guide.
 
 KDE policy keeps the simplified layout consistent; it is not a security sandbox.
 The separate non-admin account is the primary privilege boundary.
@@ -90,11 +101,22 @@ Additional software:
 - Coolmath Games as a Vivaldi app window
 - A general Vivaldi browser launcher
 
-Vivaldi receives mandatory policy that disables browser DNS-over-HTTPS,
-extensions, guest mode, additional browser profiles, incognito mode, and
-developer tools. Google SafeSearch and YouTube Restricted Mode are requested
-through Chromium policy, and browser password saving is disabled. Effective
-policy must be confirmed at `vivaldi://policy` during graphical testing.
+Vivaldi receives mandatory policy that disables browser DNS-over-HTTPS, guest
+mode, additional browser profiles, incognito mode, and developer tools, and sets
+`ExtensionInstallBlocklist` to `*`, which blocks installation of extensions. It
+does not remove extensions that are already installed, so a parent must also
+confirm the child profile has none. Google SafeSearch and YouTube Restricted
+Mode are requested through Chromium policy, and browser password saving is
+disabled. Effective policy must be confirmed at `vivaldi://policy` during
+graphical testing.
+
+Kid Pix, Teach Your Monster, and Coolmath Games are each a
+`vivaldi-stable --app=URL` window: a full browser window that the child can
+navigate away from, open new tabs in, and use the address bar in. It is a
+presentation choice, not a sandbox. `chalkboard-browser.desktop` is a plain
+browser launcher with no URL restriction, so the child can reach any site that
+passes DNS filtering and browser policy. See the architecture boundaries for
+what this does and does not prevent.
 
 Vivaldi does not provide a verified policy or command-line switch that skips its
 own welcome flow. A parent must complete it once before lockdown. Teach Your
@@ -120,6 +142,16 @@ removed for a child who does not meet that age requirement.
   active link uses it. On networks that block outbound TCP port 853 the resolver
   cannot be reached; recovery switches back to the Cloudflare default.
 - Reapplies policy to new NetworkManager connections through a dispatcher.
+- Sets `ipv4.dns-priority` and `ipv6.dns-priority` to the lowest possible
+  value, `-2147483648`, on each managed connection. Lower values win in
+  NetworkManager's DNS selection, so the filtered resolvers take precedence
+  over DHCP-provided ones on the same link. A connection or VPN that routes
+  traffic away from the local resolver, or that installs its own resolver
+  outside this configuration, still bypasses the filtered resolvers.
+- Clears `FallbackDNS` in both resolver drop-ins, so there is no unfiltered
+  backup resolver. On a network that blocks TCP port 853, resolution either
+  downgrades to plaintext or fails outright instead of falling back to a
+  provider outside the selected filter.
 - Disables Vivaldi Secure DNS so the browser uses the filtered system resolver.
 - Allows the child to connect to or disconnect from Wi-Fi through the restricted
   panel; newly created Wi-Fi profiles receive Family DNS when activated.
@@ -137,16 +169,29 @@ local users even though its local source file is root-only.
 
 ## Power
 
-- Keeps TuneD's existing `powersave` profile.
-- Disables suspend, hibernate, hybrid sleep, and suspend-then-hibernate.
-- Masks the corresponding systemd sleep targets.
-- Requests clean shutdown for the power key and any detected lid switch.
-- Configures the same shutdown behavior in the child PowerDevil profile.
+- Does not configure TuneD or `power-profiles-daemon` at all. No script in this
+  repository sets, changes, or verifies a power profile; `audit.sh` only
+  reports which of those packages and services are present. Treat an expected
+  `powersave` profile as an unverified precondition and check it yourself with
+  `tuned-adm active` or `powerprofilesctl get` during the audit.
+- Disables suspend, hibernate, hybrid sleep, and suspend-then-hibernate
+  system-wide, not only for the child. `deploy.sh` installs
+  `/etc/systemd/logind.conf.d/90-chalkboard-power.conf` and
+  `/etc/systemd/sleep.conf.d/90-chalkboard-disable-sleep.conf` and masks the
+  sleep targets with `systemctl mask`. The parent loses suspend too, and only
+  `rollback.sh` restores it; there is no per-account or per-session opt-out.
+- Requests clean shutdown for the power key and any detected lid switch
+  system-wide, through the same logind drop-in.
+- Configures the same shutdown behavior in the child PowerDevil profile. This
+  half is child-scoped: `deploy.sh` writes `powerdevilrc` into the child's own
+  `.config`.
 - Shows charge state and brightness controls through Plasma's battery widget.
 - Provides confirmed on-screen shutdown and restart for tablets and detachables.
 
 The HP Elite x2 is detachable and may not generate a lid event. Always close
-documents before testing the cover or power button.
+documents before testing the cover or power button. Because the sleep policy is
+system-wide, test lid and power-key behavior last, and be aware that the
+parent's own suspend is already gone.
 
 Its touchscreen, Wacom pen/finger input, touchpad, lid switch, tablet-mode
 switches, 2736x1824 internal display, and active orientation sensor service were

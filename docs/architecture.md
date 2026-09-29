@@ -26,9 +26,21 @@ These are intentionally different implementations.
 7. Apply restrictions only after parent recovery has been tested.
 8. Run behavioral verification and record a local change manifest.
 
-Each mutating command must support a dry run where practical and preserve the
-previous value in a root-owned local state directory. Re-running a completed
-phase must not duplicate repositories, launchers, widgets, or configuration.
+Mutating commands are idempotent and rerunnable, and preserve the first
+pre-existing value of each managed file in a root-owned local state directory.
+`install_managed_file` in `scripts/fedora/lib.sh` calls `backup_file` before
+installing, and `backup_file` returns immediately if a backup already exists.
+Only the first value is preserved: a later rerun that changes a managed file
+does not update the saved original. Re-running a completed phase must not
+duplicate repositories, launchers, widgets, or configuration.
+
+Dry runs are the exception, not the rule. Only
+`scripts/fedora/create-child-user.sh` implements `--dry-run`. Other commands
+apply changes directly, so review the audit and the phase's documentation
+before running them. `scripts/fedora/weather.sh` rewrites
+`/etc/chalkboard/weather.conf` on every enable or disable without backing up
+each intermediate change, so the saved original is the pre-deployment file,
+not the previous weather setting.
 
 ## Boundaries
 
@@ -71,9 +83,13 @@ and confirmed power actions. A documented parent recovery path remains required.
 
 ### Power behavior
 
-Suspend support and lid behavior are hardware-specific. The project must not
-disable suspend or convert lid-close to shutdown on every device by default.
-Those changes belong in an explicit hardware profile and require confirmation.
+Suspend support and lid behavior are hardware-specific, so neither belongs in a
+generic default. The Fedora adapter is an explicit, device-confirmed exception:
+`deploy.sh` installs the logind and sleep drop-ins and masks the sleep targets
+for this one hardware profile, which disables suspend for every account on the
+machine, including the parent's, and is restored only by full rollback. Any new
+platform adapter must make the same trade-off explicit rather than inheriting
+it.
 
 ### Web applications
 
@@ -96,13 +112,23 @@ this repository.
 ## Repository layout
 
 ```text
-docs/
-  architecture.md
-  platforms/
-scripts/
-  fedora/
+config/fedora/            managed configuration data, the source of truth
+  app-allowlist.txt       Dashboard curation allowlist
+  kde/panel.js            child panel layout, applied by first-login
+  kde/weather.js          optional weather widget reconciliation
+  launchers/*.desktop     child launcher definitions
+  systemd/                screen-time service and timer units
+  systemd-resolved.conf           Cloudflare drop-in
+  systemd-resolved-nextdns.conf   NextDNS drop-in
+  vivaldi-policy.json     managed Vivaldi policy
+  vivaldi.repo            signed upstream RPM repository
+docs/                     policy, runbooks, and boundaries
+scripts/fedora/           implementation
+tests/                    static and behavioral checks
 ```
 
-Future configuration data should remain separate from shell implementation so
-application catalogs and policy defaults can be reviewed without executing
-code.
+`config/fedora/` is the single source of truth for the data installed onto the
+device; the scripts only install, never restate. It is reviewed without
+executing code, and the remaining managed files (SDDM, logind, sleep, KDE
+policy, PowerDevil, screen-time, and the GCompris session) sit beside the
+examples above.
