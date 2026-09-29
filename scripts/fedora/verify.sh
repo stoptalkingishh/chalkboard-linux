@@ -5,12 +5,15 @@ set -Eeuo pipefail
 failures=0
 
 check() {
-  local description="$1"
+  local description="$1" output
   shift
-  if "$@" >/dev/null 2>&1; then
+  # Keep the reason for a failure. A parent running this over SSH on a
+  # locked-down device cannot reconstruct why a bare "FAIL" fired.
+  if output="$("$@" 2>&1)"; then
     printf 'PASS  %s\n' "$description"
   else
     printf 'FAIL  %s\n' "$description"
+    [[ -n "$output" ]] && printf '        %s\n' "${output//$'\n'/$'\n'        }"
     failures=$((failures + 1))
   fi
 }
@@ -147,9 +150,7 @@ check "Application Dashboard was provisioned" grep -Fq \
 check "Icons-only Task Manager was provisioned" grep -Fq \
   'plugin=org.kde.plasma.icontasks' \
   /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc
-check "app menu is curated" bash -c \
-  "! awk '/^plugin=org.kde.plasma.kickerdash\$/{f=1;next} f && /^hiddenApplications=/{n=split(substr(\$0,index(\$0,\"=\")+1),a,\",\"); exit n>10 ? 1 : 0}' \
-     /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc"
+check "app menu is curated" /usr/local/libexec/chalkboard-check-app-menu
 check "immutable KDE policy is finalized" test -f /var/lib/chalkboard/finalized
 if [[ -x /usr/local/libexec/chalkboard-screen-time ]]; then
   check "screen-time configuration is valid" /usr/local/libexec/chalkboard-screen-time check
@@ -164,10 +165,18 @@ else
   check "optional weather is disabled" test ! -f \
     /home/chalkboard/.local/state/chalkboard/weather-enabled
   # A disabled feature must not leave a Chalkboard-managed weather widget on the
-  # panel; otherwise the config was changed manually after finalization.
+  # panel; otherwise the config was changed manually after finalization. The
+  # applet config must exist, or this would pass on a device where Plasma never
+  # wrote one. weather.js records the widget with Managed=true, but KConfig
+  # serialisation of a boolean is not guaranteed to use that spelling.
   check "no Chalkboard weather widget remains" bash -c \
-    "! grep -Eq 'Managed=true' /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc"
+    "[[ -f /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc ]] &&
+       ! grep -Eqi '^managed=(true|1|yes|on)$' \
+         /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc"
 fi
 
 printf '\nFailures: %s\n' "$failures"
-exit "$failures"
+# Exit status is truncated to its low 8 bits, so a bare count would report
+# success at 256 failures.
+(( failures > 0 )) && exit 1
+exit 0

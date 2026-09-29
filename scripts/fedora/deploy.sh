@@ -132,6 +132,8 @@ install_managed_file "$REPO_ROOT/config/fedora/kde/panel.js" \
   /usr/local/share/chalkboard/panel.js
 install_managed_file "$SCRIPT_DIR/curate-app-menu.sh" \
   /usr/local/libexec/chalkboard-curate-app-menu 0755
+install_managed_file "$SCRIPT_DIR/check-app-menu.sh" \
+  /usr/local/libexec/chalkboard-check-app-menu 0755
 install_managed_file "$REPO_ROOT/config/fedora/app-allowlist.txt" \
   /usr/local/share/chalkboard/app-allowlist.txt
 install_managed_file "$REPO_ROOT/config/fedora/kde/weather.js" \

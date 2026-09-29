@@ -13,7 +13,13 @@ else
   # Installed entry point.
   ALLOWLIST_FILE="${CHALKBOARD_ALLOWLIST:-/usr/local/share/chalkboard/app-allowlist.txt}"
 fi
-CHILD_USER="${CHALKBOARD_CHILD_USER:-chalkboard}"
+# The first positional argument wins, so a caller that knows the real account name
+# cannot be silently ignored in favour of the default.
+CHILD_USER="${1:-${CHALKBOARD_CHILD_USER:-chalkboard}}"
+[[ "$CHILD_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || {
+  echo "invalid child user name: $CHILD_USER" >&2
+  exit 1
+}
 CHILD_HOME="$(getent passwd "$CHILD_USER" | cut -d: -f6)"
 APPSRC="$CHILD_HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 KICKERDASH_PLUGIN=org.kde.plasma.kickerdash

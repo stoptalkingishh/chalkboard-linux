@@ -9,10 +9,22 @@ permissions:
 
 jobs:
   static-checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    # A hung gate blocks every later push; the whole suite is seconds on a warm
+    # runner, so anything near this limit is a deadlock, not slow work.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - name: Install validators
         run: sudo apt-get update && sudo apt-get install -y desktop-file-utils shellcheck
+      # tests/static.sh runs `node --check` over the Plasma QML/JS and
+      # `node tests/weather.js`; without these the suite died on a missing
+      # interpreter rather than on a real defect.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Run checks
         run: bash tests/static.sh

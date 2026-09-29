@@ -15,6 +15,10 @@ log "installing the disabled-by-default screen-time framework"
 dnf -y install libnotify python3 shadow-utils systemd
 install -d -o root -g root -m 0700 "$STATE_DIR" "$BACKUP_DIR" "$STATE_DIR/screen-time"
 
+# A dangling symlink here would satisfy the `-e` test as false while `install -D`
+# follows it into an arbitrary path as root, so reject any symlink outright.
+[[ ! -L /etc/chalkboard/screen-time.conf ]] \
+  || die "/etc/chalkboard/screen-time.conf is a symlink; refusing to follow it"
 if [[ ! -e /etc/chalkboard/screen-time.conf ]]; then
   backup_file /etc/chalkboard/screen-time.conf
   install -D -o root -g root -m 0600 \
@@ -35,12 +39,6 @@ install_managed_file "$REPO_ROOT/config/fedora/systemd/chalkboard-screen-time.ti
   /etc/systemd/system/chalkboard-screen-time.timer
 install_managed_file "$REPO_ROOT/docs/screen-time.md" \
   /usr/local/share/doc/chalkboard/screen-time.md
-
-if [[ ! -e /etc/chalkboard/screen-time.conf ]]; then
-  backup_file /etc/chalkboard/screen-time.conf
-  install -D -o root -g root -m 0600 \
-    "$REPO_ROOT/config/fedora/screen-time.conf" /etc/chalkboard/screen-time.conf
-fi
 
 restorecon -RF /etc/chalkboard /etc/systemd/system/chalkboard-screen-time.* \
   /usr/local/libexec/chalkboard-screen-time /usr/local/sbin/chalkboard-screen-time \
