@@ -13,16 +13,31 @@ cd "$REPO_ROOT"
 CHECKER=scripts/fedora/check-app-menu.sh
 failures=0
 
-# A scan tree is a space-separated list of directories.
-ROOT_SCAN=''
-
 fail() {
   printf 'FAIL  %s\n' "$*" >&2
   failures=$((failures + 1))
 }
 
-# A fixture tree shaped like a real Fedora KDE install: the child account's
-# XDG application directories, with allowlisted and non-allowlisted entries.
+# A fixture tree shaped like a real Fedora KDE install: the child account's XDG
+# application directories, with allowlisted and non-allowlisted entries.
+#
+# Entries are real minimal desktop files, not empty placeholders, because
+# child_visible_applications() in lib.sh parses them: a non-Type=Application
+# entry, or one marked NoDisplay, is not visible to the child and must not be
+# expected in the denylist. A fixture of empty files would silently assert
+# nothing.
+write_desktop() { # write_desktop <path> [extra key=value]
+  local path="$1"
+  shift
+  {
+    echo '[Desktop Entry]'
+    echo 'Type=Application'
+    echo 'Name=Fixture'
+    echo 'Exec=/bin/true'
+    printf '%s\n' "$@"
+  } >"$path"
+}
+
 build_fixture() {
   local root="$1"
   rm -rf "$root"
@@ -34,25 +49,44 @@ build_fixture() {
   mkdir -p "$root/etc"
   # CRLF on purpose: the checker must tolerate a checkout with CRLF endings.
   sed 's/$/\r/' config/fedora/app-allowlist.txt >"$root/etc/app-allowlist.txt"
+  local entry
   while IFS= read -r entry; do
     case "$entry" in
-      chalkboard-*) printf x >"$root/home/chalkboard/.local/share/applications/$entry";;
+      chalkboard-*) write_desktop "$root/home/chalkboard/.local/share/applications/$entry";;
     esac
   done <config/fedora/app-allowlist.txt
-  printf x >"$root/usr/share/applications/org.kde.dolphin.desktop"
-  local e
-  for e in org.kde.konsole.desktop org.kde.discover.desktop systemsettings.desktop \
-           org.mozilla.firefox.desktop org.kde.kate.desktop vivaldi-stable.desktop; do
-    printf x >"$root/usr/share/applications/$e"
+  write_desktop "$root/usr/share/applications/org.kde.dolphin.desktop"
+  for entry in org.kde.konsole.desktop org.kde.discover.desktop systemsettings.desktop \
+              org.mozilla.firefox.desktop org.kde.kate.desktop vivaldi-stable.desktop; do
+    write_desktop "$root/usr/share/applications/$entry"
   done
+  # A control entry that is installed but NOT visible to the child: curation must
+  # not list it, so it must not appear in the expected denylist either.
+  write_desktop "$root/usr/share/applications/org.kde.kcm_hidden.desktop" 'NoDisplay=true'
 }
 
+# The fixture must mirror the layout Plasma actually writes, which was verified
+# against a real Fedora 43 container: the applet header first, then plugin=, and
+# only then the [Configuration][General] group holding the keys. An earlier
+# version of this fixture put the group header first, which the verifier was
+# written to match, so both agreed with each other and disagreed with every real
+# device. Container testing is what caught it.
 write_appletsrc() {
   local path="$1" hidden="$2"
   mkdir -p "$(dirname "$path")"
   {
-    echo '[Containments][75][Applets][76][Configuration][General]'
+    echo '[Containments][75]'
+    echo 'formfactor=2'
+    echo 'immutability=1'
+    echo 'location=bottom'
+    echo 'plugin=org.kde.panel'
+    echo
+    echo '[Containments][75][Applets][76]'
+    echo 'immutability=1'
     echo 'plugin=org.kde.plasma.kickerdash'
+    echo
+    echo '[Containments][75][Applets][76][Configuration][General]'
+    echo 'favoriteApps=applications:chalkboard-gcompris.desktop,preferred://filemanager'
     # An empty $hidden is a fixture in its own right, so the conditional must
     # not be the last command in the group or `set -e` sees it as a failure.
     if [[ -n "$hidden" ]]; then
@@ -77,9 +111,9 @@ run_checker() {
   CHECK_OUTPUT=$(
     CHALKBOARD_CHILD_USER=chalkboard \
     CHALKBOARD_APPLETSRC="$appletrc" \
+    CHALKBOARD_CHILD_HOME="$ROOT/home/chalkboard" \
     CHALKBOARD_ALLOWLIST="$ROOT/etc/app-allowlist.txt" \
-    CHALKBOARD_SCAN_DIRS="$ROOT_SCAN" \
-    bash "$CHECKER" 2>&1
+      bash "$CHECKER" 2>&1
   )
   CHECK_STATUS=$?
   set -e
@@ -105,9 +139,12 @@ expect() {
 ROOT=$(mktemp -d)
 trap 'rm -rf "$ROOT"' EXIT
 build_fixture "$ROOT"
-ROOT_SCAN="$ROOT/usr/share/applications $ROOT/usr/local/share/applications"
-ROOT_SCAN+=" $ROOT/var/lib/flatpak/exports/share/applications"
-ROOT_SCAN+=" $ROOT/home/chalkboard/.local/share/applications"
+# The checker reads its inputs through lib.sh, so point the application
+# directories at the fixture rather than at this machine's real ones.
+export CHALKBOARD_APPLICATION_DIRS="$ROOT/usr/share/applications"
+CHALKBOARD_APPLICATION_DIRS+=" $ROOT/usr/local/share/applications"
+CHALKBOARD_APPLICATION_DIRS+=" $ROOT/var/lib/flatpak/exports/share/applications"
+CHALKBOARD_APPLICATION_DIRS+=" $ROOT/home/chalkboard/.local/share/applications"
 
 # Expected denylist: everything installed that is not allowlisted.
 EXPECTED='org.kde.kate.desktop,org.kde.konsole.desktop,org.kde.discover.desktop,org.mozilla.firefox.desktop,systemsettings.desktop,vivaldi-stable.desktop'
@@ -136,10 +173,41 @@ expect 'empty applet config fails' fail "$ROOT/empty"
 
 expect 'missing applet config fails' fail "$ROOT/absent"
 
+# The legacy slash-separated group the real device config also carries. Its
+# hiddenApplications must not be mistaken for the kickerdash applet's.
+write_legacy_slash_group() {
+  local path="$1" hidden="$2"
+  {
+    write_appletsrc_body
+    echo
+    echo '[Containments/75/Applets/76][Configuration][General]'
+    echo "hiddenApplications=$hidden"
+  } >"$path"
+}
+write_appletsrc_body() {
+  echo '[Containments][75][Applets][76]'
+  echo 'plugin=org.kde.plasma.kickerdash'
+  echo
+  echo '[Containments][75][Applets][76][Configuration][General]'
+  echo 'favoriteApps=applications:chalkboard-gcompris.desktop'
+  echo "hiddenApplications=$EXPECTED"
+}
+write_legacy_slash_group "$ROOT/legacy" 'org.kde.kate.desktop,org.kde.konsole.desktop,org.kde.discover.desktop,org.mozilla.firefox.desktop,systemsettings.desktop,vivaldi-stable.desktop'
+expect 'a legacy slash-path duplicate group does not confuse the lookup' pass "$ROOT/legacy"
+
+write_appletsrc "$ROOT/good" "$EXPECTED"
+
 # Prove the fixtures are meaningful: a fixture tree with no applications at all
 # must not satisfy a check that expects a non-empty denylist.
 rm -f "$ROOT"/usr/share/applications/*.desktop
 expect 'every app removed makes the stale denylist fail' fail "$ROOT/good"
+
+# A NoDisplay entry is installed but invisible to the child, so curation must not
+# name it. If the checker and the curation writer disagreed about this, curation
+# output and checker expectation would diverge exactly as they did in production.
+build_fixture "$ROOT"
+write_appletsrc "$ROOT/with-nodisplay" "$EXPECTED,org.kde.kcm_hidden.desktop"
+expect 'a NoDisplay entry in the denylist is rejected' fail "$ROOT/with-nodisplay"
 
 if (( failures > 0 )); then
   printf '\napp-menu check tests: %s failure(s)\n' "$failures" >&2

@@ -56,7 +56,14 @@ bash tests/rollback.sh
 # nothing else in the tree ever parses it.
 node --check config/fedora/kde/panel.js
 node --check config/fedora/kde/weather.js
-python3 -m py_compile scripts/fedora/screen-time.py
+# Compile to a throwaway path: the plain `py_compile` module writes a __pycache__
+# entry, which fails on a read-only checkout and leaves an artifact otherwise.
+compile_tmp="$(mktemp -d)"
+trap 'rm -rf "$compile_tmp"' EXIT
+python3 -c '
+import py_compile, sys
+py_compile.compile(sys.argv[1], cfile=sys.argv[2], doraise=True)
+' scripts/fedora/screen-time.py "$compile_tmp/screen-time.pyc"
 
 python3 -m json.tool config/fedora/vivaldi-policy.json >/dev/null
 bash tests/dns-validation.sh

@@ -102,6 +102,25 @@ See [features](docs/features.md), [recovery](docs/recovery.md), the
 [roadmap](docs/roadmap.md), and [technical sources](docs/sources.md) for
 important boundaries and limitations.
 
+## Testing
+
+Three layers, and they are not interchangeable. The distinction matters: two
+real bugs in the app-menu verifier passed the fixture-based layer and were caught
+only by the container layer, because the fixtures and the bugs happened to share
+the same wrong assumption about Plasma's config format.
+
+| Layer | Command | Covers |
+|---|---|---|
+| Static and unit | `bash tests/static.sh` | ShellCheck over every script, `desktop-file-validate`, JSON validity, DNS validation, launcher/allowlist consistency, and unit tests for the screen-time, weather, retro, rollback, and app-menu logic. Needs `shellcheck`, `desktop-file-utils`, `python3`, and `node`. This is what CI runs. |
+| Fedora container | see [tests/fedora-container](tests/fedora-container/README.md) | The curation and verification scripts against a real Fedora 43 root filesystem and its real desktop file database, with a real unprivileged child account. Not in CI, because the image build takes minutes. |
+| Device | `sudo bash scripts/fedora/verify.sh` | The provisioned laptop: package state, DNS, tablet mode, panel provisioning, and app-menu curation. |
+
+Only the device layer can confirm anything graphical. The container has no
+display server, no D-Bus, and no Plasma, so it cannot establish that the kiosk
+policy is enforced; that the panel, Dashboard, touch input, or virtual keyboard
+work; or that `org.kde.plasma.kickerdash` consumes the `hiddenApplications` key
+the way the code assumes. See the container README for the full list.
+
 Optional Fedora downtime schedules are installed and enabled separately. See
 [Fedora screen time](docs/screen-time.md); the framework is disabled by default
 and its example config contains no schedule.
