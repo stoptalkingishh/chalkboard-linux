@@ -163,3 +163,49 @@ done
 
 printf '[launchers] %d dashboard favourites, %d panel launchers, %d allowlist entries agree.\n' \
   "${#dashboard_favorites[@]}" "${#panel_launchers[@]}" "${#allowlist[@]}"
+
+# ---- package-list consistency ----
+# deploy.sh installs a list of packages and verify.sh asserts a second list is
+# installed. Nothing checked that the two agree, so removing a package from one
+# and not the other produced either a permanently red verify or a silently
+# unchecked package. The child-facing applications are the subset that ships a
+# launcher; the rest are Plasma components the panel and lockdown depend on.
+DEPLOY=scripts/fedora/deploy.sh
+VERIFY=scripts/fedora/verify.sh
+[[ -r "$DEPLOY" && -r "$VERIFY" ]] || die "expected $DEPLOY and $VERIFY to exist"
+
+# The package list deploy.sh installs, and the list verify.sh asserts. Two
+# hand-maintained lists describing the same set, with nothing checking they agree:
+# removing a package from one and not the other left either a permanently red
+# verify or a dependency nobody checked.
+mapfile -t verify_packages < <(
+  sed -n 's/^for package in \(.*\); do$/\1/p' "$VERIFY" | tr ' ' '\n' |
+    grep -E '^[A-Za-z0-9][A-Za-z0-9._+-]*$'
+)
+((${#verify_packages[@]} > 0)) ||
+  die "could not read the asserted package list from $VERIFY"
+
+# Every package verify.sh asserts must appear in deploy.sh's dnf invocation.
+dnf_block=$(awk '/^dnf -y install/ { collect = 1 } collect { print } collect && !/\\$/ { exit }' "$DEPLOY")
+[[ -n "$dnf_block" ]] || die "could not read the dnf package list from $DEPLOY"
+for package in "${verify_packages[@]}"; do
+  grep -qw -- "$package" <<<"$dnf_block" ||
+    die "verify.sh asserts $package is installed but deploy.sh does not install it"
+done
+
+# The Plasma components the panel and lockdown depend on must be installed and
+# separately verified, so a drop from one is caught.
+readonly VERIFIED_APPLICATIONS=(
+  gcompris-qt kolourpaint kcalc libreoffice-writer ktuberling kmines
+  plasma-keyboard plasma-nm plasma-pa bluedevil iio-sensor-proxy cage
+)
+for package in "${VERIFIED_APPLICATIONS[@]}"; do
+  grep -qw -- "$package" <<<"$dnf_block" ||
+    die "$package is expected to be installed by deploy.sh but is not"
+  if ! grep -q -- "$package" "$VERIFY"; then
+    die "deploy.sh installs $package but verify.sh never checks it"
+  fi
+done
+
+printf '[launchers] deploy.sh installs and verify.sh checks %s child-facing packages.\n' \
+  "${#VERIFIED_APPLICATIONS[@]}"

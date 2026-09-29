@@ -48,6 +48,7 @@ done < <(find scripts config tests -type f -name '*.sh' -print)
 bash tests/retro-lib.sh
 bash tests/launchers.sh
 bash tests/app-menu.sh
+bash tests/rollback.sh
 
 # panel.js is handed verbatim to PlasmaShell.evaluateScript, so a syntax error
 # there does not fail loudly -- it yields an empty child panel. weather.js is
