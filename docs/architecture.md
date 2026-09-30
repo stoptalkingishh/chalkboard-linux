@@ -65,6 +65,38 @@ The child session remains a normal multitasking desktop. Policy fixes the panel
 layout and hides advanced launch paths; it does not block ordinary application
 behavior or replace Linux account permissions.
 
+### What the immutable KDE policy does and does not enforce
+
+The policy is installed as `/etc/xdg/chalkboard/kdeglobals` and
+`kglobalshortcutsrc`, reached by the child session through the
+`XDG_CONFIG_DIRS` entry in `/etc/xdg/plasma-workspace/env/`. Both files mark
+every group or key `[$i]`, and that marker is the entire enforcement mechanism.
+
+This is worth stating because it is easy to assume the opposite. It is
+tempting to reason that `XDG_CONFIG_DIRS` is only a fallback path, that KConfig
+therefore resolves `~/.config/kdeglobals` first, and that the child can simply
+write their own file and unlock the desktop. That is not what happens, and the
+reason is the marker rather than the search path. Measured with real KConfig on
+Fedora 43:
+
+| Situation | `run_command` resolves to |
+|---|---|
+| policy only | `false` |
+| user `~/.config/kdeglobals` sets it to `true` | `false` |
+| user `~/.config/kdeglobals` sets it to `true` **and marks the group `[$i]`** | `false` |
+| the policy's own `[$i]` removed, user file sets it to `true` | **`true`** |
+
+The last row is the point: remove one `[$i]` and the user's file wins, silently
+and permanently. `tests/static.sh` asserts every group in `kdeglobals` and every
+key in `kglobalshortcutsrc` still carries the marker, and
+`tests/fedora-container/run.sh` asserts the behaviour with real KConfig, so the
+assertion is not taken on faith.
+
+What this does *not* cover, and cannot: whether
+`plasma-desktop/scripting_console=false` actually blocks
+`org.kde.plasma.PlasmaShell.evaluateScript` over D-Bus. That is a separate
+question with no test, and it needs graphical verification on the device.
+
 Convertible devices use Plasma Desktop's packaged automatic tablet mode,
 Plasma Keyboard, KScreen, and `iio-sensor-proxy`. Plasma Mobile is not used
 because it is a separate phone-oriented session rather than an adaptive laptop

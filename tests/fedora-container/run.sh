@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# The [$i] markers in the KConfig fixtures are literal syntax: KConfig treats
+# them as a marker, so the shell must not expand them.
+# shellcheck disable=SC2016
 # Container integration test for the app-menu curation and its verifier.
 #
 # This runs the SHIPPED scripts/fedora/curate-app-menu.sh and
@@ -263,6 +267,79 @@ fi
 rm -f /usr/local/libexec/chalkboard-check-app-menu \
       /usr/local/libexec/chalkboard-curate-app-menu \
       /usr/local/libexec/chalkboard-lib
+
+# ---- 10. the immutable policy cannot be overridden from the child's home ----
+# An audit claimed the kiosk policy was defeated because XDG_CONFIG_DIRS is a
+# fallback path and KConfig resolves ~/.config/kdeglobals first. Measured here
+# with real KConfig on Fedora 43, and the claim does not hold: KConfig treats a
+# [$i] group or key as immutable, and a user file cannot override it even when
+# the user marks their own group [$i]. Both policy files rely on that marker, so
+# this asserts the behaviour rather than re-raising it.
+# The [$i] markers in the fixtures below are literal KConfig syntax and must
+# not be expanded by the shell.
+# shellcheck disable=SC2016
+policy_root=$(mktemp -d)
+mkdir -p "$policy_root/xdg" "$policy_root/home/.config" "$policy_root/work"
+install -m 0644 "$REPO/config/fedora/kde/kdeglobals" "$policy_root/xdg/kdeglobals"
+install -m 0644 "$REPO/config/fedora/kde/kglobalshortcutsrc" \
+  "$policy_root/xdg/kglobalshortcutsrc"
+export XDG_CONFIG_HOME="$policy_root/home/.config"
+export XDG_CONFIG_DIRS="$policy_root/xdg:/etc/xdg"
+kde_read() {
+  kreadconfig6 --file kdeglobals --group 'KDE Action Restrictions' \
+    --key run_command 2>/dev/null
+}
+shortcut_read() {
+  kreadconfig6 --file kglobalshortcutsrc --group plasmashell \
+    --key 'activate application launcher' 2>/dev/null
+}
+
+policy_value=$(kde_read)
+if [[ "$policy_value" == false ]]; then
+  pass 'the policy restricts run_command with no user file present'
+else
+  fail "the policy did not take effect: run_command=$policy_value"
+fi
+
+# A user file trying to re-enable it, without and then with its own marker.
+printf '[KDE Action Restrictions]\nrun_command=true\n' >"$XDG_CONFIG_HOME/kdeglobals"
+if [[ "$(kde_read)" == false ]]; then
+  pass 'a user kdeglobals cannot re-enable run_command'
+else
+  fail "a user kdeglobals overrode the policy: run_command=$(kde_read)"
+fi
+printf '[KDE Action Restrictions][$i]\nrun_command=true\n' >"$XDG_CONFIG_HOME/kdeglobals"
+if [[ "$(kde_read)" == false ]]; then
+  pass 'a user kdeglobals marked [$i] still cannot re-enable run_command'
+else
+  fail "a user \$i marker overrode the policy: run_command=$(kde_read)"
+fi
+
+# The same question for the shortcut lockdown, which marks keys rather than
+# groups.
+rm -f "$XDG_CONFIG_HOME/kdeglobals"
+printf '[plasmashell]\nactivate application launcher[$i]=Meta,Alt+F2,Activate Application Launcher\n' \
+  >"$XDG_CONFIG_HOME/kglobalshortcutsrc"
+if [[ "$(shortcut_read)" == none* ]]; then
+  pass 'a user kglobalshortcutsrc cannot rebind the application launcher'
+else
+  fail "a user kglobalshortcutsrc rebound the launcher: $(shortcut_read)"
+fi
+rm -f "$XDG_CONFIG_HOME/kglobalshortcutsrc"
+
+# Dropping a marker is the one way to lose this, and it is silent. tests/static.sh
+# asserts the markers are present; confirm here that a marker really is what makes
+# the difference, so the assertion is not cargo cult.
+sed 's/\[\$i\]$//' "$REPO/config/fedora/kde/kdeglobals" >"$policy_root/xdg/kdeglobals"
+printf '[KDE Action Restrictions]\nrun_command=true\n' >"$XDG_CONFIG_HOME/kdeglobals"
+if [[ "$(kde_read)" == true ]]; then
+  pass 'without the [$i] marker the user file does win, so the marker is load-bearing'
+else
+  fail 'the marker is not load-bearing; the static check may be asserting nothing'
+fi
+install -m 0644 "$REPO/config/fedora/kde/kdeglobals" "$policy_root/xdg/kdeglobals"
+rm -rf "$policy_root"
+unset XDG_CONFIG_HOME XDG_CONFIG_DIRS
 
 if (( failures > 0 )); then
   printf '\ncontainer integration: %s failure(s)\n' "$failures" >&2
