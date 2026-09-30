@@ -341,6 +341,55 @@ install -m 0644 "$REPO/config/fedora/kde/kdeglobals" "$policy_root/xdg/kdeglobal
 rm -rf "$policy_root"
 unset XDG_CONFIG_HOME XDG_CONFIG_DIRS
 
+# ---- 11. the Wine prefix chain is entirely the child's ---------------------
+# retro-game.sh created ~/.local/share/chalkboard/retro/game-N with
+# `install -d -o chalkboard`, which applies the owner only to the directories it
+# is given and leaves the ancestors it creates root-owned. Measured: the child
+# could still create drive_c/ inside the prefix, so the installer itself worked,
+# but it could not create a second game or remove the parents, leaving root-owned
+# residue in the child's home. The chain is now created as the child.
+retro_chain=/home/chalkboard/.local/share/chalkboard
+rm -rf "$retro_chain" 2>/dev/null || true
+prefix="$retro_chain/retro/game-1/prefix"
+make_child_prefix() {
+  local target="$1" current
+  current=/home/chalkboard
+  while [[ "$current" != "/" ]]; do
+    [[ ! -L "$current" ]] || return 1
+    current="$(dirname -- "$current")"
+  done
+  runuser -u "$CHILD_USER" -- mkdir -p -m 0700 -- "$target"
+}
+if make_child_prefix "$(dirname -- "$prefix")" && make_child_prefix "$prefix"; then
+  for level in chalkboard chalkboard/retro chalkboard/retro/game-1 \
+               chalkboard/retro/game-1/prefix; do
+    owner=$(stat -c '%U' "/home/chalkboard/.local/share/$level" 2>/dev/null)
+    if [[ "$owner" == "$CHILD_USER" ]]; then
+      pass "$level is owned by the child"
+    else
+      fail "$level is owned by ${owner:-nobody}, not the child"
+    fi
+  done
+  if runuser -u "$CHILD_USER" -- mkdir -p "$prefix/drive_c" 2>/dev/null; then
+    pass 'the child can create drive_c/ inside the prefix'
+  else
+    fail 'the child cannot create drive_c/ inside the prefix'
+  fi
+  if runuser -u "$CHILD_USER" -- mkdir -p "$retro_chain/retro/game-2" 2>/dev/null; then
+    pass 'the child can create a second game directory'
+  else
+    fail 'the child cannot create a second game directory'
+  fi
+  if runuser -u "$CHILD_USER" -- rm -rf "$retro_chain" 2>/dev/null &&
+     [[ ! -e "$retro_chain" ]]; then
+    pass 'uninstall leaves no root-owned residue in the child home'
+  else
+    fail 'uninstall left residue the child cannot remove'
+  fi
+else
+  fail 'could not create the Wine prefix chain as the child'
+fi
+
 if (( failures > 0 )); then
   printf '\ncontainer integration: %s failure(s)\n' "$failures" >&2
   exit 1
