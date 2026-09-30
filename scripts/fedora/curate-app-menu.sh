@@ -57,13 +57,16 @@ for id in "${visible[@]}"; do
   [[ $skip -eq 0 ]] && hidden+=("$id")
 done
 
-# Locate the kickerdash applet within its containment.
-read -r applet_header < <(find_kickerdash_applet "$APPSRC")
-[[ -n "${applet_header:-}" ]] || { echo "kickerdash applet not found" >&2; exit 1; }
-containment="${applet_header#[Containments][}"
-containment="${containment%%][[]Applets]*}"
-applet="${applet_header##*[[]Applets][]}"
-applet="${applet%%]}"
+# Locate the kickerdash applet within its containment. read returns non-zero at
+# EOF with no input, which under `set -e` would abort before the diagnostic on the
+# next line could explain why.
+containment=''
+applet=''
+read -r containment applet < <(find_kickerdash_ids "$APPSRC") || true
+[[ -n "${containment:-}" && -n "${applet:-}" ]] || {
+  echo "kickerdash applet not found" >&2
+  exit 1
+}
 
 # Write a StringList of header names. KConfig group paths are written one
 # bracket level per --group argument.

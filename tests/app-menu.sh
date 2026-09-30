@@ -192,8 +192,131 @@ write_appletsrc_body() {
   echo 'favoriteApps=applications:chalkboard-gcompris.desktop'
   echo "hiddenApplications=$EXPECTED"
 }
-write_legacy_slash_group "$ROOT/legacy" 'org.kde.kate.desktop,org.kde.konsole.desktop,org.kde.discover.desktop,org.mozilla.firefox.desktop,systemsettings.desktop,vivaldi-stable.desktop'
+write_legacy_slash_group "$ROOT/legacy" "$EXPECTED"
 expect 'a legacy slash-path duplicate group does not confuse the lookup' pass "$ROOT/legacy"
+
+# The decoy cases. Reading hiddenApplications from anywhere after the applet header
+# rather than from the applet's own group let verify.sh report the app menu as
+# curated while the real kickerdash group held nothing at all, so the child saw
+# every application. Each fixture below puts a plausible key where only the wrong
+# parser would find it.
+DECOY='org.kde.discover.desktop,org.kde.kate.desktop,org.kde.konsole.desktop'
+
+{
+  echo '[Containments][75][Applets][76]'
+  echo 'plugin=org.kde.plasma.kickerdash'
+  echo
+  echo '[Containments][75][Applets][76][Configuration][General]'
+  echo 'favoriteApps=applications:chalkboard-gcompris.desktop'
+  echo
+  echo '[Containments/75/Applets/76][Configuration][General]'
+  echo "hiddenApplications=$DECOY"
+} >"$ROOT/decoy-slash"
+expect 'a slash-path group before the real value is not read as the denylist' fail \
+  "$ROOT/decoy-slash"
+
+{
+  echo '[Containments][75][Applets][76]'
+  echo 'plugin=org.kde.plasma.kickerdash'
+  echo
+  echo '[Containments][75][Applets][76][Configuration][General]'
+  echo 'favoriteApps=applications:chalkboard-gcompris.desktop'
+  echo
+  echo '[Containments][75][Applets][77]'
+  echo 'plugin=org.kde.plasma.icontasks'
+  echo
+  echo '[Containments][75][Applets][77][Configuration][General]'
+  echo "hiddenApplications=$DECOY"
+} >"$ROOT/decoy-other-applet"
+expect 'another applet'"'"'s group is not read as the denylist' fail "$ROOT/decoy-other-applet"
+
+{
+  echo '[Containments][75][Applets][76]'
+  echo 'plugin=org.kde.plasma.kickerdash'
+  echo
+  echo '[Containments][75][Applets][76][Configuration][General]'
+  echo 'favoriteApps=applications:chalkboard-gcompris.desktop'
+  echo
+  echo '[Containments][75][Applets][77]'
+  echo 'plugin=org.kde.plasma.kclock'
+  echo
+  echo '[Containments][75][Applets][77][Configuration][Clock]'
+  echo "hiddenApplications=$DECOY"
+} >"$ROOT/decoy-subgroup"
+expect 'a sibling Configuration subgroup is not read as the denylist' fail \
+  "$ROOT/decoy-subgroup"
+
+# kickerdash as a containment plugin, not an applet, after an unrelated applet.
+# The applet variable must be cleared at the containment boundary, or this would
+# return the earlier applet's header and the writer would hide applications in
+# the wrong applet.
+{
+  echo '[Containments][3][Applets][4]'
+  echo 'plugin=org.kde.plasma.icontasks'
+  echo
+  echo '[Containments][9]'
+  echo 'plugin=org.kde.plasma.kickerdash'
+} >"$ROOT/containment-plugin"
+applet=$(bash -c '
+  # shellcheck source=../scripts/fedora/lib.sh
+  source scripts/fedora/lib.sh
+  find_kickerdash_applet "$1"' _ "$ROOT/containment-plugin" 2>/dev/null || true)
+if [[ -z "$applet" ]]; then
+  printf 'PASS  a containment-level kickerdash plugin is not mistaken for an applet\n'
+else
+  fail "find_kickerdash_applet returned '$applet' for a containment-level plugin"
+fi
+
+# ---- the group the writer actually targets --------------------------------
+# Deriving the containment and applet ids with bash parameter expansion silently
+# produced a mangled group name, because ${var#[Containments][} treats
+# [Containments] as a glob character class rather than as literal text. The
+# result was that hiddenApplications was written to a group the Dashboard never
+# reads, while the verifier -- which then matched the key anywhere in the file --
+# reported the app menu as curated. A deployed container showed the real output:
+#   [Containments][\x5bContainments\x5d\x5b75][Applets][...
+# Stub kwriteconfig6 and assert the group path it is asked to write.
+write_appletsrc "$ROOT/writer" "$EXPECTED"
+mkdir -p "$ROOT/bin"
+cat >"$ROOT/bin/kwriteconfig6" <<'STUB'
+#!/usr/bin/env bash
+# Record the group path and the value, then apply nothing.
+group=''
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --group) group+="${2}]["; shift 2 ;;
+    --key) printf 'key=%s\n' "$2" >>"$STUB_LOG"; shift 2 ;;
+    --file) printf 'file=%s\n' "$2" >>"$STUB_LOG"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+printf 'group=%s\n' "${group%]}" >>"$STUB_LOG"
+exit 0
+STUB
+chmod +x "$ROOT/bin/kwriteconfig6"
+: >"$ROOT/kwrite.log"
+STUB_LOG="$ROOT/kwrite.log" \
+CHILD_USER_FOR_TEST=1 \
+  CHALKBOARD_CHILD_USER="${CHILD_USER_OVERRIDE:-chalkboard}" \
+  CHALKBOARD_ALLOWLIST="$ROOT/etc/app-allowlist.txt" \
+  PATH="$ROOT/bin:$PATH" \
+  CHILD_HOME_OVERRIDE="$ROOT/home/chalkboard" \
+  bash -c '
+    # Run only the id derivation the writer depends on, against the fixture.
+    # shellcheck source=../scripts/fedora/lib.sh
+    source scripts/fedora/lib.sh
+    read -r c a < <(find_kickerdash_ids "$1")
+    printf "ids=%s,%s\n" "$c" "$a" >>"$STUB_LOG"
+  ' _ "$ROOT/writer"
+if grep -qx 'ids=75,76' "$ROOT/kwrite.log"; then
+  printf 'PASS  the writer derives containment 75 and applet 76 from the header\n'
+else
+  fail "wrong containment/applet ids: $(grep '^ids=' "$ROOT/kwrite.log")"
+  fail "a mangled id writes hiddenApplications to a group the Dashboard never reads"
+fi
+if grep -q '\[' "$ROOT/kwrite.log" 2>/dev/null && grep '^ids=' "$ROOT/kwrite.log" | grep -qE 'ids=[^,]*\['; then
+  fail "the derived ids contain a bracket: $(grep '^ids=' "$ROOT/kwrite.log")"
+fi
 
 write_appletsrc "$ROOT/good" "$EXPECTED"
 

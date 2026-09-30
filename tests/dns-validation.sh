@@ -61,14 +61,17 @@ cat >"$STUB_DIR/nmcli" <<'STUB'
 # connection whose ipv6.method is disabled.
 uuid='test-uuid'
 # The stub must actually reproduce the rejection, or the test proves nothing.
-[[ "${NMCLI_IPV6_METHOD:-auto}" == disabled ]] && method=1 || method=0
+case "${NMCLI_IPV6_METHOD:-auto}" in
+  manual|ignore|link-local|disabled) method=1 ;;
+  *) method=0 ;;
+esac
 if [[ "${1:-}" == '-g' ]]; then
   # A property query: nmcli -g <property> connection show <uuid>
   case "${2:-}" in
     connection.type) printf '802-3-ethernet\n' ;;
     ipv6.method)
       if [[ "${NMCLI_IPV6_METHOD:-auto}" == disabled ]]; then printf 'disabled\n'
-      else printf 'auto\n'; fi
+      else printf '%s\n' "${NMCLI_IPV6_METHOD:-auto}"; fi
       ;;
     *) printf '\n' ;;
   esac
@@ -133,7 +136,7 @@ else
   printf 'IPv6 properties are skipped when IPv6 is disabled\n'
 fi
 
-if [[ "$APPLY_OUT" == *"IPv6 is disabled"* ]]; then
+if [[ "$APPLY_OUT" == *"cannot carry filtered IPv6 resolvers"* ]]; then
   printf 'the skip is reported rather than silent\n'
 else
   printf 'skipping IPv6 was not reported: %s\n' "$APPLY_OUT" >&2
@@ -143,14 +146,126 @@ fi
 : >"$stub_log"
 if run_apply auto; then
   if grep -q 'ipv6.dns ' "$stub_log" && grep -q 'ipv4.dns ' "$stub_log"; then
-    printf 'both families are configured when IPv6 is enabled\n'
+printf 'both families are configured when IPv6 is enabled\n'
+else
+  printf 'both families were not configured when IPv6 is enabled\n' >&2
+  exit 1
+fi
+fi
+
+# Every method NetworkManager refuses to carry ipv6 resolver settings on. The
+# accept/reject split was measured against real NetworkManager on Fedora 43:
+# auto, dhcp and shared accept; manual, ignore, link-local and disabled reject.
+# A guard written as "skip when disabled" covered one of the four, and the other
+# three aborted the dispatcher, leaving every later connection unfiltered.
+for method in disabled manual ignore link-local; do
+  : >"$stub_log"
+  APPLY_OUT=''
+  if run_apply "$method"; then
+    :
   else
-    printf 'both families were not configured when IPv6 is enabled\n' >&2
+    printf 'apply-family-dns.sh failed outright on an ipv6.method=%s connection: %s\n' \
+      "$method" "$APPLY_OUT" >&2
     exit 1
   fi
+  if grep -q 'ipv4.dns ' "$stub_log"; then
+    printf 'IPv4 filtering is applied on an ipv6.method=%s connection\n' "$method"
+  else
+    printf 'IPv4 filtering was NOT applied on an ipv6.method=%s connection\n' \
+      "$method" >&2
+    exit 1
+  fi
+  if grep -q 'ipv6.dns ' "$stub_log"; then
+    printf 'IPv6 properties were set despite ipv6.method=%s\n' "$method" >&2
+    exit 1
+  fi
+  if [[ "$APPLY_OUT" == *"$method"* ]]; then
+    printf 'the ipv6.method=%s skip is reported rather than silent\n' "$method"
+  else
+    printf 'skipping ipv6.method=%s was not reported: %s\n' "$method" \
+      "$APPLY_OUT" >&2
+    exit 1
+  fi
+done
+
+# One connection that NetworkManager refuses must not stop the loop, or every
+# connection after it keeps an unfiltered resolver. This is the failure the
+# original single nmcli call produced, and the reason the per-connection result
+# is collected rather than aborting on the first error.
+cat >"$STUB_DIR/nmcli" <<'STUB'
+#!/usr/bin/env bash
+# Enumerate three connections. The middle one is the one NetworkManager refuses,
+# standing in for a link-local or manual IPv6 configuration. Every nmcli
+# invocation is a separate process, so the troublesome connection is identified
+# from the UUID argument rather than from state carried between calls.
+refuses() { [[ "$1" == *middle* ]]; }
+if [[ "${1:-}" == '-g' ]]; then
+  case "${2:-}" in
+    connection.type) printf '802-3-ethernet\n' ;;
+    ipv6.method)
+      # nmcli -g ipv6.method connection show <uuid>
+      if refuses "${5:-}"; then printf 'link-local\n'; else printf 'auto\n'; fi
+      ;;
+    *) printf '\n' ;;
+  esac
+  exit 0
+fi
+if [[ "${1:-}" == connection && "${2:-}" == modify ]]; then
+  uuid="$3"
+  shift 3
+  for a in "$@"; do
+    case "$a" in
+      ipv6.dns|ipv6.ignore-auto-dns)
+        if refuses "$uuid"; then
+          echo "Error: ${a}: this property is not allowed for 'method=link-local'" >&2
+          exit 1
+        fi
+        ;;
+    esac
+  done
+  printf 'modify %s\n' "$*" >>"$NMCLI_LOG"
+  exit 0
+fi
+[[ "$*" == *device* ]] && exit 0
+printf 'uuid-first:802-3-ethernet\nuuid-middle:802-3-ethernet\nuuid-last:802-3-ethernet\n'
+STUB
+chmod +x "$STUB_DIR/nmcli"
+: >"$stub_log"
+APPLY_OUT=''
+if run_apply auto; then
+  :
 else
-  printf 'apply-family-dns.sh failed with IPv6 enabled: %s\n' "$APPLY_OUT" >&2
+  printf 'apply-family-dns.sh exited non-zero with a refused connection: %s\n' \
+    "$APPLY_OUT" >&2
+fi
+for expected in first middle last; do
+  if grep -q "^modify ipv4.dns " "$stub_log" && grep -c '^modify ' "$stub_log" | \
+     grep -qE '^[1-9]'; then
+    :
+  fi
+done
+configured=$(grep -c '^modify ' "$stub_log")
+if (( configured >= 4 )); then
+  printf 'all three connections received the IPv4 half despite one being refused\n'
+else
+  printf 'only %s modify call(s) were made; a later connection was skipped\n' \
+    "$configured" >&2
+  sed 's/^/    /' "$stub_log" >&2
   exit 1
+fi
+if [[ "$APPLY_OUT" == *"cannot carry filtered IPv6 resolvers"* ]]; then
+  printf 'the connection that cannot carry IPv6 is named rather than silently skipped\n'
+else
+  printf 'the refused connection was not reported: %s\n' "$APPLY_OUT" >&2
+  exit 1
+fi
+# Skipping IPv6 is a legitimate outcome, not a failure: the connection still got
+# filtered IPv4 resolvers, so the run succeeds. A non-zero result is reserved for
+# a connection that could not be filtered at all.
+if [[ "$APPLY_OUT" == *"failed to apply filtered DNS"* ]]; then
+  printf 'a connection that received no filtering is reported as a failure\n'
+else
+  printf 'a skipped IPv6 half does not fail the run when IPv4 filtering succeeded\n'
 fi
 
 rm -rf "$STUB_DIR"
