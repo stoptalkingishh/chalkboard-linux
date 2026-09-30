@@ -11,8 +11,15 @@ expect_valid() {
 }
 
 expect_invalid() {
-  if "$@"; then
-    printf 'Expected invalid: %q\n' "$*" >&2
+  # Every retro_valid_* predicate is a bare [[ ]] test and retro_write_desktop
+  # dies, so the code that must reject the input is always exactly 1. Assert
+  # that literally: the old `if "$@"; then` form could not tell rejection from
+  # "function missing" (127), which meant deleting a predicate from
+  # retro-lib.sh turned its own test into a silent pass.
+  local st=0
+  "$@" >/dev/null 2>&1 || st=$?
+  if [[ $st -ne 1 ]]; then
+    printf 'expected %q to be rejected with exit 1, got %s\n' "$*" "$st" >&2
     exit 1
   fi
 }
@@ -40,9 +47,6 @@ expect_invalid retro_valid_sha256 "$(printf 'z%.0s' {1..64})"
 desktop="$(retro_write_desktop 'Parents Game' game-2)"
 grep -Fxq 'Name=Parents Game' <<<"$desktop"
 grep -Fxq 'Exec=/usr/local/libexec/chalkboard-retro-launch game-2' <<<"$desktop"
-if retro_write_desktop $'Game\nExec=/bin/sh' game-2 >/dev/null; then
-  printf 'Unsafe desktop name was accepted.\n' >&2
-  exit 1
-fi
+expect_invalid retro_write_desktop $'Game\nExec=/bin/sh' game-2
 
 printf 'Retro validation tests passed.\n'

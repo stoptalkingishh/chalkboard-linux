@@ -351,7 +351,17 @@ def main() -> int:
         if settings is not None and (args.command != "check" or effective_uid == 0):
             check_config_security(CONFIG_PATH)
         if args.command == "check":
-            assert settings is not None
+            if settings is None:
+                raise RuntimeError("configuration could not be loaded")
+            if effective_uid != 0:
+                # The permission check above is root-only. Say so, rather than
+                # reporting "Valid configuration" for a file whose ownership
+                # nobody has verified.
+                print(
+                    "note: configuration parsed, but its ownership and mode were "
+                    "not verified because this check did not run as root",
+                    file=sys.stderr,
+                )
             print(f"Valid configuration: {len(settings.windows)} downtime window(s).")
             return 0
         STATE_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -361,12 +371,14 @@ def main() -> int:
             os.chmod(LOCK_PATH, 0o600)
             fcntl.flock(lock_file, fcntl.LOCK_EX)
             if args.command == "enforce":
-                assert settings is not None
+                if settings is None:
+                    raise RuntimeError("configuration could not be loaded")
                 grace_wait = enforce(settings)
             elif args.command in ("release", "force-release"):
                 release(settings, force=args.command == "force-release")
             else:
-                assert settings is not None
+                if settings is None:
+                    raise RuntimeError("configuration could not be loaded")
                 print_status(settings)
         # The grace delay must not hold the lock, or recovery commands would
         # block for the whole grace period. Re-check after the delay so a
@@ -376,7 +388,8 @@ def main() -> int:
             with LOCK_PATH.open("a", encoding="utf-8") as lock_file:
                 os.chmod(LOCK_PATH, 0o600)
                 fcntl.flock(lock_file, fcntl.LOCK_EX)
-                assert settings is not None
+                if settings is None:
+                    raise RuntimeError("configuration could not be loaded")
                 enforce(settings)
         return 0
     except (ConfigError, KeyError, OSError, RuntimeError, subprocess.SubprocessError) as error:

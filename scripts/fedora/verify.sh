@@ -2,15 +2,27 @@
 
 set -Eeuo pipefail
 
+# The app-menu check compares two sorted sets; pin the collation so a different
+# locale cannot order them differently and report a false mismatch.
+export LC_ALL=C
+
 failures=0
 
 check() {
-  local description="$1"
+  local description="$1" output
   shift
-  if "$@" >/dev/null 2>&1; then
+  # Keep the reason for a failure. A parent running this over SSH on a
+  # locked-down device cannot reconstruct why a bare "FAIL" fired.
+  if output="$("$@" 2>&1)"; then
     printf 'PASS  %s\n' "$description"
   else
     printf 'FAIL  %s\n' "$description"
+    # Indent with a linear pipeline. String substitution of every newline is
+    # quadratic in the output length and turned a large dump into an apparent
+    # hang. sed -n l also escapes control characters, so output containing escape
+    # sequences cannot forge a PASS line in the report.
+    [[ -n "$output" ]] &&
+      printf '%s\n' "$output" | sed -n 's/^/        /; s/[^[:print:]]/./gp; $s/$//' | head -20
     failures=$((failures + 1))
   fi
 }
@@ -147,9 +159,7 @@ check "Application Dashboard was provisioned" grep -Fq \
 check "Icons-only Task Manager was provisioned" grep -Fq \
   'plugin=org.kde.plasma.icontasks' \
   /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc
-check "app menu is curated" bash -c \
-  "! awk '/^plugin=org.kde.plasma.kickerdash\$/{f=1;next} f && /^hiddenApplications=/{n=split(substr(\$0,index(\$0,\"=\")+1),a,\",\"); exit n>10 ? 1 : 0}' \
-     /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc"
+check "app menu is curated" /usr/local/libexec/chalkboard-check-app-menu
 check "immutable KDE policy is finalized" test -f /var/lib/chalkboard/finalized
 if [[ -x /usr/local/libexec/chalkboard-screen-time ]]; then
   check "screen-time configuration is valid" /usr/local/libexec/chalkboard-screen-time check
@@ -164,10 +174,18 @@ else
   check "optional weather is disabled" test ! -f \
     /home/chalkboard/.local/state/chalkboard/weather-enabled
   # A disabled feature must not leave a Chalkboard-managed weather widget on the
-  # panel; otherwise the config was changed manually after finalization.
+  # panel; otherwise the config was changed manually after finalization. The
+  # applet config must exist, or this would pass on a device where Plasma never
+  # wrote one. weather.js records the widget with Managed=true, but KConfig
+  # serialisation of a boolean is not guaranteed to use that spelling.
   check "no Chalkboard weather widget remains" bash -c \
-    "! grep -Eq 'Managed=true' /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc"
+    "[[ -f /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc ]] &&
+       ! grep -Eqi '^managed=(true|1|yes|on)$' \
+         /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc"
 fi
 
 printf '\nFailures: %s\n' "$failures"
-exit "$failures"
+if (( failures > 0 )); then
+  exit 1
+fi
+exit 0

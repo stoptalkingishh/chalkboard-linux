@@ -27,15 +27,30 @@ publisher-supported installer or do not register the title.
 ## Before installation
 
 1. Complete the main Fedora deployment and confirm parent recovery access.
-2. Log into the child graphical session and remain present throughout setup.
-3. Back up the device and any existing game saves.
-4. Obtain the installer directly from owned physical media or an authenticated
+2. Decide whether to run `finalize-lockdown.sh` before or after registering a
+   game; this determines whether the launcher is visible to the child. The safe
+   order is deploy, register the game, add its launcher to
+   `config/fedora/app-allowlist.txt`, then run `finalize-lockdown.sh`.
+3. Log into the child graphical session and remain present throughout setup.
+4. Back up the device and any existing game saves.
+5. Obtain the installer directly from owned physical media or an authenticated
    publisher/store account. Do not use repacks or third-party cracks.
-5. Calculate and record the exact local file's digest with
+6. Calculate and record the exact local file's digest with
    `sha256sum /absolute/path/to/installer.exe`. A digest detects accidental or
    later substitution; it does not prove that an untrusted file is safe.
-6. Determine the installed executable's path relative to the Wine prefix. It
+7. Determine the installed executable's path relative to the Wine prefix. It
    must begin with `drive_c/` and end with `.exe`.
+
+Curation is a static snapshot. `finalize-lockdown.sh` calls
+`scripts/fedora/curate-app-menu.sh`, which writes the current list of hidden
+application IDs into the child's kickerdash configuration and does not
+re-evaluate it later. A launcher registered before finalization is not in
+`config/fedora/app-allowlist.txt` unless a parent adds it, so finalization hides
+it from the Dashboard. A launcher registered after finalization is not in the
+snapshot, so it stays visible, which bypasses curation entirely. The snapshot
+reading of kickerdash's `hiddenApplications` key was confirmed by inspecting the
+script and Plasma's applet configuration, not by an automated test or a
+graphical session; no test in this repository covers it.
 
 ## Install and register
 

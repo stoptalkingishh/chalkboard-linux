@@ -43,6 +43,23 @@ The implementation was validated against these upstream references on
 - [`loginctl terminate-user`](https://man7.org/linux/man-pages/man1/loginctl.1.html)
 - [systemd timer behavior](https://man7.org/linux/man-pages/man5/systemd.timer.5.html)
 
+Three of the KDE behavioural references are pinned to the `Plasma/6.4` branch,
+while the tested development baseline is Plasma 6.6.5. Those references are
+therefore two minor releases behind the baseline.
+
+The paths were re-checked on 2026-09-29, and upstream has moved: in `Plasma/6.6`
+the weather applet configuration is
+`kdeplasma-addons/applets/weather/main.xml` and the NOAA ion is
+`kdeplasma-addons/applets/weather/ions/noaa`, no longer under `plasma-workspace`
+`dataengines/weather/ions`. The 6.4 links are kept because they are what was
+actually reviewed for this implementation; re-pinning them to 6.6 paths would
+imply a fresh behavioural review that has not been performed. The 6.4
+`main.xml` and the 6.6 `main.xml` declare the same `WeatherStation` and
+`Appearance` groups, but the 6.6 file has not been checked in full and the
+Fedora 43 `kdeplasma-addons` build has not been confirmed to match either.
+Verify the effective widget behavior on the device before relying on these
+references.
+
 The ScratchJr browser-launcher decision was reviewed against these sources on
 2026-09-08:
 
