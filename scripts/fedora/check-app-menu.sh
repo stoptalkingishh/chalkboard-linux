@@ -17,8 +17,17 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=lib.sh
-source "$SCRIPT_DIR/lib.sh"
+# Installed as /usr/local/libexec/chalkboard-check-app-menu, where lib.sh is
+# installed under its installed name. Same two-location pattern weather.sh uses;
+# without it the installed copy cannot find its dependencies and
+# finalize-lockdown.sh aborts on a freshly deployed device.
+if [[ -r "$SCRIPT_DIR/lib.sh" ]]; then
+  # shellcheck source=lib.sh
+  source "$SCRIPT_DIR/lib.sh"
+else
+  # shellcheck source=lib.sh
+  source /usr/local/libexec/chalkboard-lib
+fi
 
 CHILD_USER="${CHALKBOARD_CHILD_USER:-chalkboard}"
 APPLETSRC="${CHALKBOARD_APPLETSRC:-}"

@@ -10,8 +10,16 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # Visibility, allowlist parsing, and the kickerdash applet lookup live in lib.sh
 # so this script and check-app-menu.sh cannot disagree about what the child can
 # see. They did disagree once, and the verifier was wrong.
-# shellcheck source=lib.sh
-source "$SCRIPT_DIR/lib.sh"
+#
+# Installed as /usr/local/libexec/chalkboard-curate-app-menu, where lib.sh is
+# installed under its installed name. Same two-location pattern weather.sh uses.
+if [[ -r "$SCRIPT_DIR/lib.sh" ]]; then
+  # shellcheck source=lib.sh
+  source "$SCRIPT_DIR/lib.sh"
+else
+  # shellcheck source=lib.sh
+  source /usr/local/libexec/chalkboard-lib
+fi
 if [[ -f "$SCRIPT_DIR/../../config/fedora/app-allowlist.txt" ]]; then
   ALLOWLIST_FILE="${CHALKBOARD_ALLOWLIST:-$SCRIPT_DIR/../../config/fedora/app-allowlist.txt}"
 else

@@ -25,6 +25,7 @@ fi
 configure_profile() {
   local uuid="$1"
   local type
+  local ipv6_method
 
   type="$(nmcli -g connection.type connection show "$uuid")"
   case "$type" in
@@ -35,18 +36,38 @@ configure_profile() {
       ;;
   esac
 
+  # NetworkManager refuses to set ipv6.dns on a connection whose IPv6 method is
+  # disabled, which is what it reports whenever IPv6 is turned off in the GUI.
+  # That is a common configuration.
+  #
+  # nmcli applies a modify atomically, so a rejected property discards the
+  # others. Setting both families in one call therefore left the connection with
+  # no filtering at all, and because the dispatcher runs on every activation and
+  # NetworkManager ignores its exit status, the failure was silent and
+  # repeatable. Apply the families separately so IPv4 filtering always lands, and
+  # leave IPv6 alone when it is switched off rather than enabling it behind the
+  # parent's back.
+  ipv6_method="$(nmcli -g ipv6.method connection show "$uuid" 2>/dev/null || printf 'auto')"
+
   nmcli connection modify "$uuid" \
     ipv4.ignore-auto-dns yes \
-    ipv6.ignore-auto-dns yes \
     ipv4.dns-priority -2147483648 \
-    ipv6.dns-priority -2147483648 \
     ipv4.dns-search '~.' \
-    ipv6.dns-search '~.' \
-    ipv4.dns "$ipv4_dns" \
-    ipv6.dns "$ipv6_dns"
+    ipv4.dns "$ipv4_dns"
+
+  if [[ "$ipv6_method" == disabled ]]; then
+    printf 'IPv6 is disabled on connection %s; applied IPv4 filtering only.\n' \
+      "$uuid" >&2
+  else
+    nmcli connection modify "$uuid" \
+      ipv6.ignore-auto-dns yes \
+      ipv6.dns-priority -2147483648 \
+      ipv6.dns-search '~.' \
+      ipv6.dns "$ipv6_dns"
+  fi
 }
 
-if [[ $EUID -ne 0 ]]; then
+if [[ $EUID -ne 0 && -z "${CHALKBOARD_FAKE_ROOT:-}" ]]; then
   printf 'Run this script as root.\n' >&2
   exit 1
 fi

@@ -84,6 +84,54 @@ docker run --rm --user root \
 The first build downloads and installs the KDE package set and takes several
 minutes. Later runs reuse the image and take seconds.
 
+## The full provisioning pipeline
+
+`tests/fedora-container/pipeline.sh` exercises `deploy.sh`,
+`finalize-lockdown.sh`, `verify.sh`, and `rollback.sh` end to end. It needs
+systemd as PID 1, so run it as a detached container and then `exec`:
+
+```bash
+docker rm -f cb-sysd
+docker run -d --name cb-sysd --privileged --cgroupns=host \
+  -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+  -v "$PWD:/repo:ro" \
+  --entrypoint /usr/lib/systemd/systemd \
+  chalkboard-f43:test /libexec/systemd/systemd-multi-user.target
+sleep 15
+docker cp tests/fedora-container/pipeline.sh cb-sysd:/pipeline.sh
+docker exec cb-sysd bash /pipeline.sh
+docker rm -f cb-sysd
+```
+
+That takes several minutes on the first run because `deploy.sh` installs
+Vivaldi from its upstream repository and CuteMaze from Flathub.
+
+**Expected result:** one failure, `rotation sensor service is active`.
+`iio-sensor-proxy` is installed but has no IIO device to attach to, because a
+container has no sensors. That check passes on the laptop.
+
+This pipeline found two defects that nothing else could have found, both in code
+that had already passed every other test layer:
+
+1. `apply-family-dns.sh` set both address families in a single `nmcli modify`.
+   NetworkManager rejects `ipv6.dns` on a connection whose `ipv6.method` is
+   `disabled`, and applies a modify atomically, so the rejection discarded the
+   IPv4 filtering too. The dispatcher runs on every activation and NetworkManager
+   ignores its exit status, so that connection silently kept an **unfiltered
+   resolver** — and `deploy.sh` aborted before installing anything else.
+2. `check-app-menu.sh` sourced `"$SCRIPT_DIR/lib.sh"`, but it is installed as
+   `/usr/local/libexec/chalkboard-check-app-menu`, where `lib.sh` is installed
+   under the name `chalkboard-lib`. The installed copy could not find it, so
+   `finalize-lockdown.sh` aborted before writing the finalized marker and
+   `verify.sh` reported two failures on a freshly deployed device. The
+   fixture-based tests could not catch it because they run the scripts from the
+   repository, where `lib.sh` is a neighbour.
+
+Neither is reachable from a desktop environment that already has a repository
+checkout and an IPv6-enabled Wi-Fi profile, which is why both survived to
+production-shaped code.
+
 The Dockerfile is not wired into `tests/static.sh` or CI, because a multi-minute
 image build does not belong in a pull-request gate. Run it deliberately when
-changing `curate-app-menu.sh`, `check-app-menu.sh`, or `lib.sh`.
+changing `deploy.sh`, `finalize-lockdown.sh`, `verify.sh`, `rollback.sh`,
+`apply-family-dns.sh`, `curate-app-menu.sh`, `check-app-menu.sh`, or `lib.sh`.

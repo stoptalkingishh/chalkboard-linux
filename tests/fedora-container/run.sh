@@ -224,6 +224,46 @@ else
   fail "find_kickerdash_applet did not locate the kickerdash applet"
 fi
 
+# ---- 9. installed helpers must work from their installed paths --------------
+# deploy.sh installs these under renamed paths, so $SCRIPT_DIR no longer points
+# at a directory holding lib.sh. check-app-menu.sh failed on a freshly deployed
+# device for exactly that reason: it sourced "$SCRIPT_DIR/lib.sh", which does not
+# exist at /usr/local/libexec/lib.sh, so finalize-lockdown.sh aborted before it
+# could write the finalized marker and verify.sh reported two failures. The
+# fixture-based tests could not catch it because they run the scripts from the
+# repository, where lib.sh is a neighbour.
+mkdir -p /usr/local/libexec
+install -m 0755 "$REPO/scripts/fedora/lib.sh" /usr/local/libexec/chalkboard-lib
+install -m 0755 "$REPO/scripts/fedora/check-app-menu.sh" \
+  /usr/local/libexec/chalkboard-check-app-menu
+install -m 0755 "$REPO/scripts/fedora/curate-app-menu.sh" \
+  /usr/local/libexec/chalkboard-curate-app-menu
+
+if output=$(/usr/local/libexec/chalkboard-check-app-menu 2>&1); then
+  pass "the installed chalkboard-check-app-menu runs from /usr/local/libexec"
+else
+  fail "the installed chalkboard-check-app-menu cannot run from /usr/local/libexec: $output"
+fi
+
+# Same script, invoked from an unrelated working directory and a bare
+# environment, which is how a systemd unit or verify.sh would call it.
+if (cd / && env -i /usr/local/libexec/chalkboard-check-app-menu >/dev/null 2>&1); then
+  pass "the installed helper works with an empty environment and an unrelated cwd"
+else
+  fail "the installed helper needs a specific environment or working directory"
+fi
+
+# And it must still be the same answer as running it from the repository.
+if (cd / && env -i "$REPO/scripts/fedora/check-app-menu.sh" >/dev/null 2>&1); then
+  pass "running from the repository gives the same verdict"
+else
+  fail "the repository copy and the installed copy disagree"
+fi
+
+rm -f /usr/local/libexec/chalkboard-check-app-menu \
+      /usr/local/libexec/chalkboard-curate-app-menu \
+      /usr/local/libexec/chalkboard-lib
+
 if (( failures > 0 )); then
   printf '\ncontainer integration: %s failure(s)\n' "$failures" >&2
   exit 1
