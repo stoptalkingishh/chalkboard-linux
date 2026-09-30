@@ -197,7 +197,30 @@ install_game() {
   install -d -o root -g root -m 0700 "$STATE_DIR/retro/backups"
   install -d -o root -g root -m 0755 "$REGISTRY_DIR"
   install -d -o root -g root -m 0711 "$STATE_DIR/retro/tmp"
-  install -d -o "$CHILD_USER" -g "$CHILD_USER" -m 0700 "$(dirname "$prefix")" "$prefix"
+  # Create the whole prefix chain as the child, without elevation.
+  #
+  # `install -d -o child` applies the owner to the directories it is given but
+  # not to the ancestors it has to create, so the chain
+  # ~/.local/share/chalkboard/retro/game-N was left root-owned. Measured on
+  # Fedora 43: the child could still create drive_c/ inside the prefix, so the
+  # installer worked, but it could not create a second game directory or remove
+  # the parents on uninstall, and the residue sat in the child's home owned by
+  # root. Creating the chain as the child also matches retro_install_child_file's
+  # reasoning: a root install into a child-owned path is a symlink hazard.
+  retro_make_child_prefix() {
+    local target="$1" current
+
+    # Refuse a symlinked ancestor rather than creating directories through it.
+    current="$CHILD_HOME"
+    while [[ "$current" != "/" ]]; do
+      [[ ! -L "$current" ]] || die "refusing symlinked path component: $current"
+      current="$(dirname -- "$current")"
+    done
+
+    runuser -u "$CHILD_USER" -- mkdir -p -m 0700 -- "$target"
+  }
+  retro_make_child_prefix "$(dirname -- "$prefix")"
+  retro_make_child_prefix "$prefix"
   installer_copy="$(mktemp "$STATE_DIR/retro/tmp/chalkboard-retro-installer.XXXXXX.exe")"
   install -o root -g root -m 0444 "$installer" "$installer_copy"
   cleanup_failed_install() {

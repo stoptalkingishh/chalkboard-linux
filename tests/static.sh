@@ -177,4 +177,14 @@ expect_no_match 'embedded NextDNS configuration ID' \
 expect_no_match 'ScratchJr executable automation' \
   grep -RIEi 'scratch[ _-]?jr' config scripts
 
+# The immutable markers are the entire enforcement mechanism, and dropping one is
+# silent. Measured on Fedora 43 with real KConfig: a user ~/.config/kdeglobals
+# cannot override a [$i] group even when the user marks their own group [$i], and a
+# user ~/.config/kglobalshortcutsrc cannot override a [$i] key. Remove a marker
+# and the child can rewrite the policy from their own home directory.
+expect_no_match 'a kdeglobals group without the immutable marker' \
+  grep -nE '^\[[^]]+\][[:space:]]*$' config/fedora/kde/kdeglobals
+expect_no_match 'a kglobalshortcutsrc key without the immutable marker' \
+  grep -nE '^[^#[][^[]*=' config/fedora/kde/kglobalshortcutsrc
+
 log 'static checks passed'
