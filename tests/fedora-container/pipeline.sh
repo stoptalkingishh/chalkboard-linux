@@ -155,7 +155,7 @@ echo '  provisioning artefacts in place'
 step '10. finalize-lockdown.sh'
 bash "$REPO/scripts/fedora/finalize-lockdown.sh" >/tmp/finalize.log 2>&1
 res 'finalize-lockdown.sh' "$?"
-cat /tmp/finalize.log | sed 's/^/  /'
+sed 's/^/  /' /tmp/finalize.log
 echo "  curated: $(grep -o 'hiddenApplications=' "$APPSRC" | head -1)$(grep -c '^hiddenApplications=' "$APPSRC") key(s)"
 echo "  /etc/xdg/chalkboard/kdeglobals: $([[ -f /etc/xdg/chalkboard/kdeglobals ]] && echo present || echo MISSING)"
 echo "  /var/lib/chalkboard/finalized:  $([[ -f /var/lib/chalkboard/finalized ]] && echo present || echo MISSING)"
@@ -163,7 +163,7 @@ echo "  /var/lib/chalkboard/finalized:  $([[ -f /var/lib/chalkboard/finalized ]]
 step '11. verify.sh'
 bash "$REPO/scripts/fedora/verify.sh" >/tmp/verify.log 2>&1
 verify_rc=$?
-cat /tmp/verify.log | sed 's/^/  /'
+sed 's/^/  /' /tmp/verify.log
 printf '  verify exit: %s\n' "$verify_rc"
 
 step '12. re-running finalize (idempotency)'
@@ -178,7 +178,7 @@ tail -2 /tmp/weather.log | sed 's/^/  /'
 step '14. rollback.sh'
 bash "$REPO/scripts/fedora/rollback.sh" >/tmp/rollback.log 2>&1
 res 'rollback.sh' "$?"
-cat /tmp/rollback.log | sed 's/^/  /'
+sed 's/^/  /' /tmp/rollback.log
 echo "  sleep.target after rollback: $(systemctl is-enabled sleep.target 2>&1)"
 echo "  /etc/xdg/chalkboard/kdeglobals still present: $([[ -f /etc/xdg/chalkboard/kdeglobals ]] && echo yes || echo no)"
 echo "  curation still present: $(grep -c '^hiddenApplications=' "$APPSRC" 2>/dev/null) key(s)"
