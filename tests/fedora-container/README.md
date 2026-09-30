@@ -135,3 +135,28 @@ The Dockerfile is not wired into `tests/static.sh` or CI, because a multi-minute
 image build does not belong in a pull-request gate. Run it deliberately when
 changing `deploy.sh`, `finalize-lockdown.sh`, `verify.sh`, `rollback.sh`,
 `apply-family-dns.sh`, `curate-app-menu.sh`, `check-app-menu.sh`, or `lib.sh`.
+
+## Deploying to an image
+
+`tests/fedora-container/deploy.sh` is the same pipeline without the rollback, so
+the container is left in a deployed state and can be committed into an image:
+
+```bash
+docker rm -f cb-deployed
+docker run -d --name cb-deployed --privileged --cgroupns=host \
+  -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+  -v "$PWD:/repo:ro" \
+  --entrypoint /usr/lib/systemd/systemd \
+  chalkboard-f43:test /libexec/systemd/systemd-multi-user.target
+sleep 15
+docker cp tests/fedora-container/deploy.sh cb-deployed:/deploy.sh
+docker exec cb-deployed bash /deploy.sh
+
+docker commit -m "Chalkboard deployed" cb-deployed chalkboard-f43:deployed
+```
+
+The result verifies at 35 passes and one expected failure
+(`rotation sensor service is active`, because a container has no IIO device).
+Every file the deployment installs is byte-identical to the repository, which is
+worth asserting: it is what caught the installed-helper bug, where the installed
+copy of a script could not find `lib.sh` under its renamed name.
