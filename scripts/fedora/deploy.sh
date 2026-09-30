@@ -130,6 +130,28 @@ install_managed_file "$SCRIPT_DIR/weather.sh" \
   /usr/local/sbin/chalkboard-weather 0755
 install_managed_file "$REPO_ROOT/config/fedora/kde/panel.js" \
   /usr/local/share/chalkboard/panel.js
+install_managed_file "$SCRIPT_DIR/child-shell.sh" \
+  /usr/local/bin/chalkboard-child-shell 0755
+# The wrapper learns which account it is for from a root-owned file beside it
+# rather than from the environment, because the environment belongs to whoever
+# invokes the shell. Mode 0644 in a world-readable directory so the child can
+# read it but cannot change it.
+# mktemp, not a fixed path: a predictable name in /tmp lets anyone pre-create
+# that path as a symlink, and root would then write the account name wherever
+# that symlink pointed. The trap removes the file even if install fails.
+account_tmp=$(mktemp /tmp/chalkboard-child-account.XXXXXX)
+trap 'rm -f "$account_tmp"' RETURN
+printf '%s\n' "$CHILD_USER" >"$account_tmp"
+install -o root -g root -m 0644 "$account_tmp" \
+  /usr/local/bin/.chalkboard-child-user
+rm -f "$account_tmp"
+trap - RETURN
+# The child account is created with a normal shell by create-child-user.sh, which
+# may run before this file exists. Point it at the restricted wrapper now, so a
+# terminal the child reaches is a speed bump rather than an unrestricted one.
+usermod --shell /usr/local/bin/chalkboard-child-shell "$CHILD_USER"
+log "set the child login shell to the restricted wrapper"
+
 install_managed_file "$SCRIPT_DIR/curate-app-menu.sh" \
   /usr/local/libexec/chalkboard-curate-app-menu 0755
 install_managed_file "$SCRIPT_DIR/check-app-menu.sh" \

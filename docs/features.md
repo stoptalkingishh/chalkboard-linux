@@ -38,8 +38,13 @@
   battery widgets without restoring the full system tray.
 - Adds a touch-friendly power menu that requires confirmation before shutdown or
   restart.
-- Disables KRunner, terminal, and application-launcher shortcuts in the child
-  session while preserving `Super+E` for Dolphin file management.
+ - Disables KRunner, terminal, and application-launcher shortcuts in the child
+   session while preserving `Super+E` for Dolphin file management.
+ - Sets the child account's login shell to a restricted wrapper
+   (`/usr/local/bin/chalkboard-child-shell`) as a second line of defence, for the
+   case where a terminal is reached some other way. See
+   [Restricted child shell](#restricted-child-shell) below for what it does and,
+   more importantly, what it does not do.
 - Disables panel editing and desktop scripting through immutable KDE policy.
   The policy is installed at finalization and applies to the child session only;
   the parent is not restricted by `/etc/xdg/chalkboard`. Whether
@@ -62,6 +67,49 @@
 
 KDE policy keeps the simplified layout consistent; it is not a security sandbox.
 The separate non-admin account is the primary privilege boundary.
+
+## Restricted child shell
+
+The child account's login shell is `/usr/local/bin/chalkboard-child-shell`. It
+exists because the primary control, hiding Konsole, is an appearance setting
+that a determined child can undo from an application menu, a `.desktop` file, or
+a file manager. The wrapper is the fallback for a terminal that appears anyway.
+
+It starts an interactive `bash` for the child account with:
+
+- the account name read from the root-owned `/usr/local/bin/.chalkboard-child-user`
+  rather than from the environment, since the environment belongs to whoever
+  invokes the shell;
+- a refusal to run unless the caller is that account, is a real login account
+  (UID ≥ 1000), is not in `wheel` or `sudo`, and has a terminal;
+- `PATH` pinned to `/usr/bin:/bin` and interpreter variables such as
+  `PYTHONPATH`, `PERL5LIB`, `BASH_ENV` and `LD_PRELOAD` cleared;
+- no history file and `umask 077`, so nothing the child runs is world-readable;
+- fixed ceilings: 120 s CPU, 200 processes, 512 open files, 512 KiB per file.
+  These bound a runaway process; they are not a quota system.
+
+### What it does not do
+
+This is a speed bump, not a security boundary, and the boundary has not moved:
+
+- The child can run `/bin/bash`, `python3`, `perl`, `awk`, or `find -exec` and get
+  an unrestricted shell or interpreter at their existing unprivileged UID.
+- The resource limits are per-process and inherited, so a child can work around
+  them by running fewer processes.
+- The wrapper protects the *terminal*, not the account. Anything else the child
+  can reach, including Dolphin, still gives file and `.desktop` access.
+
+What the wrapper actually protects against is the accidental case: a child who
+reaches a terminal and starts typing discovers there is no history file, a
+private umask, and finite resource limits. The account itself remains the real
+boundary: unprivileged, password-locked, and outside `wheel` and `sudo`.
+
+`tests/child-shell.sh` drives the wrapper through a pty as the real child
+account and asserts each behaviour above. Each assertion was checked against a
+deliberately broken copy of the wrapper to confirm the test fails when the
+behaviour is removed, rather than passing because it observed nothing. The
+administrator-account refusal is asserted by source inspection only, because
+exercising it would require creating an administrator account.
 
 ## Optional single-app mode
 

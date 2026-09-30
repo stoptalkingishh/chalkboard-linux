@@ -153,6 +153,23 @@ else
 fi
 check "Plasma panel was provisioned" test -f \
   /home/chalkboard/.local/state/chalkboard/plasma-provisioned
+# The single quotes below are deliberate: these are commands handed to bash -c,
+# where the expansion is meant to happen in that shell, not here.
+# shellcheck disable=SC2016
+check "child login shell is the restricted wrapper" bash -c \
+  '[[ "$(getent passwd chalkboard | cut -d: -f7)" \
+      == /usr/local/bin/chalkboard-child-shell ]]'
+check "restricted child shell is executable" test -x \
+  /usr/local/bin/chalkboard-child-shell
+# The account file is the one thing the wrapper trusts to decide who it is for,
+# so its ownership matters as much as the wrapper's.
+# shellcheck disable=SC2016
+check "child shell account file is root-owned and unwritable by others" bash -c \
+  '[[ -f /usr/local/bin/.chalkboard-child-user ]] &&
+     [[ "$(stat -c %U:%a /usr/local/bin/.chalkboard-child-user)" == root:644 ]]'
+# shellcheck disable=SC2016
+check "child shell account file names the child account" bash -c \
+  '[[ "$(cat /usr/local/bin/.chalkboard-child-user)" == chalkboard ]]'
 check "Application Dashboard was provisioned" grep -Fq \
   'plugin=org.kde.plasma.kickerdash' \
   /home/chalkboard/.config/plasma-org.kde.plasma.desktop-appletsrc
