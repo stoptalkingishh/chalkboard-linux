@@ -37,7 +37,10 @@ install -D -o root -g root -m 0644 \
 restorecon -RF /etc/xdg/chalkboard 2>/dev/null || true
 
 log "confirming the child app menu matches the allowlist"
-/usr/local/libexec/chalkboard-check-app-menu
+# The verifier resolves the child's home directory from the account name, so it
+# needs the same name this script is finalizing. Without it, a non-default child
+# account failed with "unknown child user" and finalization aborted.
+CHALKBOARD_CHILD_USER="$CHILD_USER" /usr/local/libexec/chalkboard-check-app-menu
 
 touch "$STATE_DIR/finalized"
 

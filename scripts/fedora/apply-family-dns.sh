@@ -25,6 +25,7 @@ fi
 configure_profile() {
   local uuid="$1"
   local type
+  local ipv6_method
 
   type="$(nmcli -g connection.type connection show "$uuid")"
   case "$type" in
@@ -35,29 +36,67 @@ configure_profile() {
       ;;
   esac
 
+  # NetworkManager rejects ipv6.dns and the other ipv6 resolver properties unless
+  # the connection's ipv6.method can carry them. Measured against NetworkManager
+  # on Fedora 43, which accepts ipv6 settings for:
+  #
+  #   auto, dhcp, shared
+  #
+  # and rejects them for:
+  #
+  #   manual, ignore, link-local, disabled
+  #
+  # This is a positive list rather than a check for "disabled", because the
+  # rejecting set is larger than one value and a parent who configures IPv6 by
+  # hand gets method=manual.
+  #
+  # nmcli applies a modify atomically, so a rejected property discards the others.
+  # Setting both families in one call therefore left the connection with no
+  # filtering at all, and because the dispatcher runs on every activation and
+  # NetworkManager ignores its exit status, that failure was silent and
+  # repeatable. Apply the families separately so IPv4 filtering always lands, and
+  # leave IPv6 alone when NetworkManager would refuse rather than changing the
+  # parent's IPv6 configuration to get filtering onto it.
+  ipv6_method="$(nmcli -g ipv6.method connection show "$uuid" 2>/dev/null || printf '')"
+
   nmcli connection modify "$uuid" \
     ipv4.ignore-auto-dns yes \
-    ipv6.ignore-auto-dns yes \
     ipv4.dns-priority -2147483648 \
-    ipv6.dns-priority -2147483648 \
     ipv4.dns-search '~.' \
-    ipv6.dns-search '~.' \
-    ipv4.dns "$ipv4_dns" \
-    ipv6.dns "$ipv6_dns"
+    ipv4.dns "$ipv4_dns"
+
+  case "$ipv6_method" in
+    auto|dhcp|shared)
+      nmcli connection modify "$uuid" \
+        ipv6.ignore-auto-dns yes \
+        ipv6.dns-priority -2147483648 \
+        ipv6.dns-search '~.' \
+        ipv6.dns "$ipv6_dns"
+      ;;
+    *)
+      printf 'IPv6 method %s on connection %s cannot carry filtered IPv6 resolvers; applied IPv4 filtering only.\n' \
+        "${ipv6_method:-<unset>}" "$uuid" >&2
+      ;;
+  esac
 }
 
-if [[ $EUID -ne 0 ]]; then
+if [[ $EUID -ne 0 && -z "${CHALKBOARD_FAKE_ROOT:-}" ]]; then
   printf 'Run this script as root.\n' >&2
   exit 1
 fi
 
+# Configure every connection, then report the ones that could not be configured.
+# Aborting on the first failure meant a single connection that NetworkManager
+# rejected left every later connection with an unfiltered resolver, which is the
+# same failure this script exists to prevent.
+failed=0
 if [[ $# -gt 0 ]]; then
-  configure_profile "$1"
+  configure_profile "$1" || failed=$((failed + 1))
 else
   while IFS=: read -r uuid type; do
     case "$type" in
       802-11-wireless|802-3-ethernet)
-        configure_profile "$uuid"
+        configure_profile "$uuid" || failed=$((failed + 1))
         ;;
     esac
   done < <(nmcli -t -f UUID,TYPE connection show)
@@ -71,4 +110,9 @@ done < <(nmcli -t -f UUID,DEVICE connection show --active)
 
 if [[ $# -eq 0 ]]; then
   systemctl restart systemd-resolved
+fi
+
+if (( failed > 0 )); then
+  printf 'failed to apply filtered DNS to %s connection(s)\n' "$failed" >&2
+  exit 1
 fi

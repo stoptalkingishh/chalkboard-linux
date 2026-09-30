@@ -2,6 +2,10 @@
 
 set -Eeuo pipefail
 
+# The app-menu check compares two sorted sets; pin the collation so a different
+# locale cannot order them differently and report a false mismatch.
+export LC_ALL=C
+
 failures=0
 
 check() {
@@ -13,7 +17,12 @@ check() {
     printf 'PASS  %s\n' "$description"
   else
     printf 'FAIL  %s\n' "$description"
-    [[ -n "$output" ]] && printf '        %s\n' "${output//$'\n'/$'\n'        }"
+    # Indent with a linear pipeline. String substitution of every newline is
+    # quadratic in the output length and turned a large dump into an apparent
+    # hang. sed -n l also escapes control characters, so output containing escape
+    # sequences cannot forge a PASS line in the report.
+    [[ -n "$output" ]] &&
+      printf '%s\n' "$output" | sed -n 's/^/        /; s/[^[:print:]]/./gp; $s/$//' | head -20
     failures=$((failures + 1))
   fi
 }
@@ -176,7 +185,7 @@ else
 fi
 
 printf '\nFailures: %s\n' "$failures"
-# Exit status is truncated to its low 8 bits, so a bare count would report
-# success at 256 failures.
-(( failures > 0 )) && exit 1
+if (( failures > 0 )); then
+  exit 1
+fi
 exit 0
